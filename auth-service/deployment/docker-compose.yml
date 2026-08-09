@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # WordPress Auth Service
+  auth-service:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - WP_ROOT_URL=${WP_ROOT_URL:-https://example.com}
+      - APP_NAME=${APP_NAME:-My Application}
+      - CALLBACK_URL=${CALLBACK_URL:-https://myapp.com/callback}
+      - CACHE_TTL=${CACHE_TTL:-300}
+      - SERVICE_PORT=8000
+      - SERVICE_HOST=0.0.0.0
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./wp_auth_service/api_keys.json:/app/wp_auth_service/api_keys.json
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - auth-network
+
+  # Optional Redis for distributed caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - auth-network
+    command: redis-server --appendonly yes
+
+volumes:
+  redis-data:
+
+networks:
+  auth-network:
+    driver: bridge

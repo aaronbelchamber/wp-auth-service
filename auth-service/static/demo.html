@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordPress Auth Service - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div x-data="demoApp()" x-init="initDemo()" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">WordPress Auth Service Demo</h1>
+            <p class="text-gray-600">Step-by-step integration demonstration</p>
+            <a href="index.html" class="text-blue-600 hover:text-blue-800">← Back to Admin</a>
+        </header>
+
+        <!-- Step Navigation -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div :class="currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
+                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
+                    <div :class="currentStep >= 1 ? 'bg-blue-600' : 'bg-gray-300'" class="h-1 w-16"></div>
+                    <div :class="currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
+                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
+                    <div :class="currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-300'" class="h-1 w-16"></div>
+                    <div :class="currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
+                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold">3</div>
+                    <div :class="currentStep >= 3 ? 'bg-blue-600' : 'bg-gray-300'" class="h-1 w-16"></div>
+                    <div :class="currentStep >= 4 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'"
+                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold">4</div>
+                </div>
+            </div>
+            <div class="flex justify-between mt-2 text-sm text-gray-600">
+                <span>Generate URL</span>
+                <span>User Auth</span>
+                <span>Parse Callback</span>
+                <span>Validate</span>
+            </div>
+        </div>
+
+        <!-- Step 1: Generate Auth URL -->
+        <div x-show="currentStep === 1" x-transition class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Step 1: Generate Authorization URL</h2>
+            <p class="text-gray-600 mb-4">
+                First, we need to generate a WordPress authorization URL that will redirect users to the WordPress admin page where they can approve the application.
+            </p>
+            
+            <div class="bg-gray-50 p-4 rounded-md mb-4">
+                <h3 class="font-medium mb-2">Configuration</h3>
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">WordPress Site URL</label>
+                        <input type="url" x-model="demoConfig.wp_root_url"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="https://example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Application Name</label>
+                        <input type="text" x-model="demoConfig.app_name"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Demo Application">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Callback URL</label>
+                        <input type="url" x-model="demoConfig.callback_url"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="https://myapp.com/callback">
+                    </div>
+                </div>
+            </div>
+
+            <button @click="generateDemoAuthUrl"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                Generate Authorization URL
+            </button>
+
+            <div x-show="demoAuthUrl" class="mt-4">
+                <h3 class="font-medium mb-2">Generated Authorization URL</h3>
+                <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                    <input type="text" x-model="demoAuthUrl" readonly
+                           class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md font-mono text-sm mb-2">
+                    <button @click="copyToClipboard(demoAuthUrl)"
+                            class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-sm">
+                        Copy URL
+                    </button>
+                    <a :href="demoAuthUrl" target="_blank"
+                       class="ml-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                        Open in New Tab
+                    </a>
+                </div>
+                <button @click="currentStep = 2"
+                        class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Next Step →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: User Authentication -->
+        <div x-show="currentStep === 2" x-transition class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Step 2: User Authenticates on WordPress</h2>
+            <p class="text-gray-600 mb-4">
+                The user will be redirected to WordPress where they can log in and approve the application. After approval, WordPress will redirect back to your callback URL with credentials.
+            </p>
+            
+            <div class="bg-amber-50 p-4 rounded-md border border-amber-200 mb-4">
+                <h3 class="font-medium text-amber-800 mb-1">💡 WordPress Requirements</h3>
+                <p class="text-amber-700 text-sm">
+                    <strong>No custom plugin is required!</strong> WordPress has built-in support for Application Passwords in core (WP 5.6+). 
+                    However, ensure your WordPress site meets these criteria:
+                </p>
+                <ul class="list-disc list-inside text-amber-700 text-sm mt-1 space-y-1">
+                    <li>Uses <strong>HTTPS</strong> (SSL enabled), as WordPress disables Application Passwords on insecure HTTP unless explicitly enabled for dev.</li>
+                    <li>Application Passwords feature is enabled on the user account (WP Admin → Users → Profile).</li>
+                    <li>Site URL points to a real WordPress installation where <code>/wp-admin/authorize-application.php</code> exists.</li>
+                </ul>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-md border border-blue-200 mb-4">
+                <h3 class="font-medium text-blue-800 mb-2">What happens in WordPress:</h3>
+                <ol class="list-decimal list-inside text-blue-700 space-y-1">
+                    <li>User logs into WordPress (if not already logged in)</li>
+                    <li>User sees the application authorization page</li>
+                    <li>User approves the application</li>
+                    <li>WordPress generates an application password</li>
+                    <li>WordPress redirects to your callback URL with credentials</li>
+                </ol>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-md border border-yellow-200 mb-4">
+                <h3 class="font-medium text-yellow-800 mb-2">For Demo Purposes:</h3>
+                <p class="text-yellow-700">
+                    Since this is a demo, you can simulate the callback URL. In a real application, WordPress would redirect to your callback URL automatically.
+                </p>
+                <input type="text" x-model="simulatedCallback"
+                       class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Paste or simulate callback URL here">
+                <p class="text-sm text-gray-500 mt-1">
+                    Example: https://myapp.com/callback?user_login=john&password=abc123&success_url=https://myapp.com/success
+                </p>
+            </div>
+
+            <button @click="currentStep = 3"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Next Step →
+            </button>
+        </div>
+
+        <!-- Step 3: Parse Callback -->
+        <div x-show="currentStep === 3" x-transition class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Step 3: Parse Callback URL</h2>
+            <p class="text-gray-600 mb-4">
+                When WordPress redirects back to your application, the callback URL contains the user's credentials. We need to parse this URL to extract the username and application password.
+            </p>
+
+            <div class="bg-gray-50 p-4 rounded-md mb-4">
+                <h3 class="font-medium mb-2">Callback URL</h3>
+                <input type="text" x-model="simulatedCallback"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Paste callback URL here">
+            </div>
+
+            <button @click="parseDemoCallback"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                Parse Callback
+            </button>
+
+            <div x-show="parsedDemoCallback" class="mt-4">
+                <h3 class="font-medium mb-2">Extracted Credentials</h3>
+                <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                    <p><strong>User Login:</strong> <span x-text="parsedDemoCallback.user_login"></span></p>
+                    <p><strong>Password:</strong> <span class="font-mono" x-text="parsedDemoCallback.password"></span></p>
+                    <p><strong>Success URL:</strong> <span x-text="parsedDemoCallback.success_url"></span></p>
+                </div>
+                <button @click="currentStep = 4"
+                        class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Next Step →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: Validate Credentials -->
+        <div x-show="currentStep === 4" x-transition class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Step 4: Validate Credentials</h2>
+            <p class="text-gray-600 mb-4">
+                Finally, we validate the credentials by making an authenticated request to the WordPress REST API to fetch the user profile.
+            </p>
+
+            <button @click="validateDemoCredentials"
+                    :disabled="!parsedDemoCallback"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                Validate Credentials
+            </button>
+
+            <div x-show="demoValidationResult" class="mt-4">
+                <h3 class="font-medium mb-2">Validation Result</h3>
+                <div :class="demoValidationResult.is_valid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'"
+                     class="p-4 border rounded-md">
+                    <p class="font-medium" x-text="demoValidationResult.is_valid ? '✓ Valid Credentials' : '✗ Invalid Credentials'"></p>
+                    
+                    <div x-show="demoValidationResult.is_valid" class="mt-4">
+                        <h4 class="font-medium mb-2">User Profile</h4>
+                        <div class="bg-white p-3 rounded-md border">
+                            <p><strong>User ID:</strong> <span x-text="demoValidationResult.user_id"></span></p>
+                            <p><strong>Username:</strong> <span x-text="demoValidationResult.username"></span></p>
+                            <p><strong>Email:</strong> <span x-text="demoValidationResult.email"></span></p>
+                            <p><strong>Roles:</strong> <span x-text="demoValidationResult.roles.join(', ')"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div x-show="!demoValidationResult.is_valid" class="mt-4">
+                        <p class="text-red-600" x-text="demoValidationResult.error_message"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="demoValidationResult && demoValidationResult.is_valid" class="mt-6">
+                <h3 class="font-semibold mb-4">Integration Code Examples</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-medium mb-2">Python</h4>
+                        <pre class="bg-gray-900 text-green-400 p-4 rounded-md overflow-x-auto text-sm"><code>import requests
+
+# Generate auth URL
+response = requests.post('http://localhost:8000/api/v1/auth/url', json={
+    'wp_root_url': 'https://example.com',
+    'app_name': 'My App',
+    'callback_url': 'https://myapp.com/callback'
+})
+auth_url = response.json()['auth_url']
+
+# Parse callback
+response = requests.post('http://localhost:8000/api/v1/auth/callback', json={
+    'callback_url': callback_url
+})
+credentials = response.json()
+
+# Validate credentials
+response = requests.post('http://localhost:8000/api/v1/auth/validate', 
+    headers={'X-API-Key': 'your-api-key'},
+    json={
+        'user_login': credentials['user_login'],
+        'password': credentials['password'],
+        'wp_root_url': 'https://example.com'
+    }
+)
+user_profile = response.json()</code></pre>
+                    </div>
+
+                    <div>
+                        <h4 class="font-medium mb-2">JavaScript/Node.js</h4>
+                        <pre class="bg-gray-900 text-green-400 p-4 rounded-md overflow-x-auto text-sm"><code>// Generate auth URL
+const response = await fetch('http://localhost:8000/api/v1/auth/url', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        wp_root_url: 'https://example.com',
+        app_name: 'My App',
+        callback_url: 'https://myapp.com/callback'
+    })
+});
+const {auth_url} = await response.json();
+
+// Parse callback
+const callbackResponse = await fetch('http://localhost:8000/api/v1/auth/callback', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({callback_url: callbackUrl})
+});
+const credentials = await callbackResponse.json();
+
+// Validate credentials
+const validateResponse = await fetch('http://localhost:8000/api/v1/auth/validate', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': 'your-api-key'
+    },
+    body: JSON.stringify({
+        user_login: credentials.user_login,
+        password: credentials.password,
+        wp_root_url: 'https://example.com'
+    })
+});
+const userProfile = await validateResponse.json();</code></pre>
+                    </div>
+
+                    <div>
+                        <h4 class="font-medium mb-2">cURL</h4>
+                        <pre class="bg-gray-900 text-green-400 p-4 rounded-md overflow-x-auto text-sm"><code># Generate auth URL
+curl -X POST http://localhost:8000/api/v1/auth/url \
+  -H "Content-Type: application/json" \
+  -d '{"wp_root_url":"https://example.com","app_name":"My App","callback_url":"https://myapp.com/callback"}'
+
+# Parse callback
+curl -X POST http://localhost:8000/api/v1/auth/callback \
+  -H "Content-Type: application/json" \
+  -d '{"callback_url":"https://myapp.com/callback?user_login=john&password=abc123"}'
+
+# Validate credentials
+curl -X POST http://localhost:8000/api/v1/auth/validate \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{"user_login":"john","password":"abc123","wp_root_url":"https://example.com"}'</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <button @click="resetDemo"
+                    class="mt-6 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                Reset Demo
+            </button>
+        </div>
+    </div>
+
+    <script src="js/demo.js"></script>
+</body>
+</html>

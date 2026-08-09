@@ -1,0 +1,308 @@
+// ===================================================================
+// WordPress Auth Service — Production SCSS Stylesheet
+// Optimized, compressed CSS source for admin dashboard UI & components
+// ===================================================================
+
+// --- 1. Core Cloak & Base Layout ---
+[x-cloak] {
+  display: none !important;
+}
+
+// --- 2. Glassmorphic Card Container ---
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+// --- 3. Buttons Component Token System ---
+.btn {
+  display: inline-flex;
+  items-align: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem; // 14px text-sm
+  border-radius: 0.75rem; // rounded-xl
+  padding: 0.5rem 1rem;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  border: 1px solid transparent;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed !important;
+  }
+
+  &-xs {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem; // 12px text-xs
+    border-radius: 0.5rem; // rounded-lg
+  }
+
+  &-sm {
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem; // 12px text-xs
+    border-radius: 0.5rem; // rounded-lg
+  }
+
+  &-primary {
+    @extend .btn;
+    background-color: #2563eb; // blue-600
+    color: #ffffff;
+    &:hover:not(:disabled) {
+      background-color: #1d4ed8; // blue-700
+    }
+  }
+
+  &-secondary {
+    @extend .btn;
+    background-color: #f1f5f9; // slate-100
+    color: #334155; // slate-700
+    border-color: #cbd5e1; // slate-300
+    &:hover:not(:disabled) {
+      background-color: #e2e8f0; // slate-200
+    }
+  }
+
+  &-emerald {
+    @extend .btn;
+    background-color: #059669; // emerald-600
+    color: #ffffff;
+    &:hover:not(:disabled) {
+      background-color: #047857; // emerald-700
+    }
+  }
+
+  &-amber {
+    @extend .btn;
+    background-color: #d97706; // amber-600
+    color: #ffffff;
+    &:hover:not(:disabled) {
+      background-color: #b45309; // amber-700
+    }
+  }
+
+  &-danger {
+    @extend .btn;
+    background-color: #ef4444; // red-500
+    color: #ffffff;
+    &:hover:not(:disabled) {
+      background-color: #dc2626; // red-600
+    }
+  }
+
+  &-outline-emerald {
+    @extend .btn;
+    background-color: #ecfdf5; // emerald-50
+    color: #047857; // emerald-700
+    border-color: #a7f3d0; // emerald-200
+    &:hover:not(:disabled) {
+      background-color: #d1fae5; // emerald-100
+    }
+  }
+
+  &-outline-blue {
+    @extend .btn;
+    background-color: #eff6ff; // blue-50
+    color: #1d4ed8; // blue-700
+    border-color: #bfdbfe; // blue-200
+    &:hover:not(:disabled) {
+      background-color: #dbeafe; // blue-100
+    }
+  }
+
+  &-outline-purple {
+    @extend .btn;
+    background-color: #faf5ff; // purple-50
+    color: #6b21a8; // purple-700
+    border-color: #e9d5ff; // purple-200
+    &:hover:not(:disabled) {
+      background-color: #f3e8ff; // purple-100
+    }
+  }
+
+  &-outline-red {
+    @extend .btn;
+    background-color: #fef2f2; // red-50
+    color: #dc2626; // red-600
+    border-color: #fecaca; // red-200
+    &:hover:not(:disabled) {
+      background-color: #fee2e2; // red-100
+    }
+  }
+}
+
+// --- 4. Form Inputs Component System ---
+.form-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #cbd5e1; // slate-300
+  border-radius: 0.75rem; // rounded-xl
+  font-size: 0.875rem; // text-sm
+  color: #1e293b; // slate-800
+  background-color: #ffffff;
+  transition: all 0.15s ease-in-out;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6; // blue-500
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  &::placeholder {
+    color: #94a3b8; // slate-400
+  }
+}
+
+.form-select {
+  @extend .form-input;
+  cursor: pointer;
+}
+
+// --- 5. Badges Component System ---
+.badge {
+  display: inline-flex;
+  items-align: center;
+  padding: 0.125rem 0.625rem; // py-0.5 px-2.5
+  border-radius: 9999px; // rounded-full
+  font-size: 0.75rem; // text-xs
+  font-weight: 600;
+  border: 1px solid transparent;
+
+  &-emerald {
+    background-color: #d1fae5; // emerald-100
+    color: #047857; // emerald-700
+    border-color: #6ee7b7; // emerald-300
+  }
+
+  &-amber {
+    background-color: #fef3c7; // amber-100
+    color: #b45309; // amber-700
+    border-color: #fcd34d; // amber-300
+  }
+
+  &-blue {
+    background-color: #dbeafe; // blue-100
+    color: #1d4ed8; // blue-700
+    border-color: #93c5fd; // blue-300
+  }
+
+  &-slate {
+    background-color: #f1f5f9; // slate-100
+    color: #475569; // slate-600
+    border-color: #e2e8f0; // slate-200
+  }
+
+  &-red {
+    background-color: #fee2e2; // red-100
+    color: #b91c1c; // red-700
+    border-color: #fca5a5; // red-300
+  }
+}
+
+// --- 6. Floating Toast Notifications System ---
+.toast-viewport {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 50;
+  max-width: 28rem;
+  width: 100%;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem; // rounded-xl
+  border-width: 1px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  items-align: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  &.success {
+    background-color: rgba(6, 78, 59, 0.92); // emerald-900/92
+    border-color: #10b981; // emerald-500
+    color: #ecfdf5; // emerald-100
+  }
+
+  &.info {
+    background-color: rgba(30, 58, 138, 0.92); // blue-900/92
+    border-color: #3b82f6; // blue-500
+    color: #eff6ff; // blue-100
+  }
+
+  &.error {
+    background-color: rgba(127, 29, 29, 0.92); // red-900/92
+    border-color: #ef4444; // red-500
+    color: #fef2f2; // red-100
+  }
+}
+
+// --- 7. Modals & Slide-over Drawers ---
+.backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6); // slate-900/60
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.modal-container {
+  @extend .backdrop-overlay;
+  display: flex;
+  items-align: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-card {
+  background-color: #ffffff;
+  border-radius: 1rem; // rounded-2xl
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 28rem;
+  width: 100%;
+  padding: 1.5rem;
+  border: 1px solid #f1f5f9;
+}
+
+.drawer-container {
+  @extend .backdrop-overlay;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer-panel {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 36rem; // max-w-xl
+  height: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 1.5rem;
+  overflow-y: auto;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+// --- 8. Code & Diagnostics Consoles ---
+.console-box {
+  background-color: #0f172a; // slate-900
+  color: #e2e8f0; // slate-200
+  padding: 1rem;
+  border-radius: 1rem; // rounded-2xl
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  overflow-x: auto;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}

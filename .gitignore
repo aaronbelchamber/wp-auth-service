@@ -1,0 +1,16 @@
+auth-service/venv/*
+__pycache__/*
+*/__pycache__/*
+*.pyc
+.env
+auth-service/wp_auth_service/*.json
+auth-service/wp_auth_service/api/__pycache__/*
+
+# AI session context — not source code
+.ai-docs/
+
+# Sensitive config files (defense-in-depth)
+*.enc
+credentials.json
+sites.yaml
+discovered_sites.json

@@ -1,0 +1,16 @@
+# WordPress Auth Service Dependencies
+
+# FastAPI and ASGI server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Configuration management
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Optional Redis support (for distributed caching)
+redis==5.0.1
+httpx==0.25.1
+
+# Python standard library is used for core auth functionality
+# No additional HTTP libraries needed for wp_auth_lib

@@ -1,0 +1,28 @@
+# Site Manager Configuration - Example Template
+# Copy this file to your site-manager config directory as sites.yaml
+# and fill in your actual site details.
+#
+# Location: <site-manager-project>/config/sites.yaml
+# Referenced by: deploy_plugin.py --site <site-slug>
+
+sites:
+  # Each key is a site slug used with: python deploy_plugin.py --site <slug>
+  my-wordpress-site:
+    # Human-readable label
+    label: "My WordPress Site"
+
+    # Full URL to the WordPress root (no trailing slash)
+    url: "https://example.com"
+
+    # Credential profile name (matches a profile in credentials.enc)
+    credential_profile: "my-site-ssh"
+
+    # Remote path to wp-content/plugins/wp-app-bridge on the server
+    plugin_path: "/var/www/html/wp-content/plugins/wp-app-bridge"
+
+  # Add more sites as needed:
+  # staging-site:
+  #   label: "Staging Environment"
+  #   url: "https://staging.example.com"
+  #   credential_profile: "staging-ssh"
+  #   plugin_path: "/var/www/html/wp-content/plugins/wp-app-bridge"

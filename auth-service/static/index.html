@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordPress Auth Service — Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="js/app.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+</head>
+<body class="bg-slate-100/90 text-slate-800 min-h-screen relative font-sans antialiased">
+<div x-cloak x-data="authApp()" x-init="initApp()" class="container mx-auto px-4 py-8 max-w-5xl">
+
+    <!-- ===== FLOATING TOAST SYSTEM (Fixed Top-Right, No Layout Shifts) ===== -->
+    <div class="fixed top-5 right-5 z-50 max-w-md w-full space-y-2 pointer-events-none">
+        <div x-show="message" x-transition:enter="transition ease-out duration-200 transform"
+             x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-150 transform"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+             :class="{
+                'bg-emerald-900/90 border-emerald-500 text-emerald-100': messageType === 'success',
+                'bg-blue-900/90 border-blue-500 text-blue-100': messageType === 'info',
+                'bg-red-900/90 border-red-500 text-red-100': messageType === 'error'
+             }"
+             class="pointer-events-auto px-4 py-3.5 rounded-xl border shadow-xl text-sm font-medium flex items-center justify-between gap-3 backdrop-blur-md">
+            <div class="flex items-center gap-2">
+                <span x-show="messageType === 'success'">✓</span>
+                <span x-show="messageType === 'info'">ℹ</span>
+                <span x-show="messageType === 'error'">⚠</span>
+                <span x-text="message"></span>
+            </div>
+            <button type="button" @click="message = ''" class="text-white/70 hover:text-white text-xs font-bold px-1">✕</button>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-5 rounded-2xl shadow-sm">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">WordPress Auth Service</h1>
+            <p class="text-sm text-slate-500">Manage WordPress endpoint connections and service authentication</p>
+        </div>
+
+        <!-- Session Key pill -->
+        <div class="flex items-center gap-3 bg-slate-50/80 px-4 py-2 rounded-xl border border-slate-200/80">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Session:</span>
+                <span x-show="apiKey"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-300">
+                    🔑 Authenticated
+                </span>
+                <span x-show="!apiKey"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300">
+                    ⚠ No Key
+                </span>
+            </div>
+
+            <!-- Info icon with hover tooltip -->
+            <div class="relative group">
+                <button type="button" class="text-slate-400 hover:text-slate-600 text-sm focus:outline-none">ⓘ</button>
+                <div class="absolute right-0 top-7 hidden group-hover:block w-72 bg-slate-900 text-white text-xs rounded-xl p-3.5 z-50 shadow-2xl leading-relaxed">
+                    <strong>What is the Session Key?</strong><br>
+                    This key authenticates your browser with the service API. Generate one from the <em>API Keys</em> tab, then set it here. Without a key you're in <em>bootstrap mode</em> — only endpoint creation is allowed.
+                </div>
+            </div>
+
+            <button type="button" @click="showApiKeyModal = true"
+                    class="px-3 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-semibold rounded-lg border border-blue-200 transition-colors">
+                Manage Key
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== SESSION KEY MODAL WITH BACKDROP BLUR ===== -->
+    <div x-show="showApiKeyModal" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div @click.away="showApiKeyModal = false" class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Set Session API Key</h3>
+            <p class="text-sm text-slate-500 mb-4">
+                Paste an API key here so your browser can access protected routes. Generate one from the API Keys tab first.
+            </p>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">API Key</label>
+            <input type="password" x-model="apiKey" placeholder="Paste key here…"
+                   class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono text-sm mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <div class="flex justify-end gap-2">
+                <button type="button" @click="showApiKeyModal = false"
+                        class="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                <button type="button" @click="setApiKey(apiKey)"
+                        class="px-4 py-2 text-sm bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors">Save Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOP NAVIGATION TABS ===== -->
+    <nav class="mb-6 border-b border-slate-200/80 flex gap-6">
+        <a href="/onboarding" @click.prevent="switchTab('onboarding')"
+           :class="tabClass('onboarding')"
+           class="pb-3 text-sm font-semibold transition-colors">✨ Connection Wizard</a>
+        <a href="/endpoints" @click.prevent="switchTab('endpoints')"
+           :class="tabClass('endpoints')"
+           class="pb-3 text-sm font-semibold transition-colors">Endpoints</a>
+        <a href="/api-keys" @click.prevent="switchTab('api-keys')"
+           :class="tabClass('api-keys')"
+           class="pb-3 text-sm font-semibold transition-colors">API Keys</a>
+        <a href="/activity" @click.prevent="switchTab('activity')"
+           :class="tabClass('activity')"
+           class="pb-3 text-sm font-semibold transition-colors">⚡ Activity Stream</a>
+        <a href="/test" @click.prevent="switchTab('test')"
+           :class="tabClass('test')"
+           class="pb-3 text-sm font-semibold transition-colors">Test Auth Flow</a>
+    </nav>
+
+        <!-- ============================================================ -->
+        <!-- CONNECTION WIZARD TAB                                         -->
+        <!-- ============================================================ -->
+        <div x-show="currentTab === 'onboarding'" x-transition class="space-y-6">
+
+            <!-- FIRST-RUN WIZARD (when no keys or endpoints are set up) -->
+            <div x-show="isFirstRun" x-transition class="glass-card rounded-2xl shadow-sm overflow-hidden mb-6">
+                <!-- Progress bar -->
+                <div class="flex border-b border-slate-100">
+                    <div class="flex-1 py-3 px-6 text-center text-sm font-semibold transition-colors"
+                         :class="wizardStep === 1 ? 'bg-blue-600 text-white' : 'bg-emerald-50 text-emerald-700'">
+                        <span x-show="wizardStep === 1">Step 1 of 2 — Generate Service Key</span>
+                        <span x-show="wizardStep !== 1">✓ Step 1 done</span>
+                    </div>
+                    <div class="flex-1 py-3 px-6 text-center text-sm font-semibold transition-colors"
+                         :class="wizardStep === 2 ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'">
+                        Step 2 of 2 — Add Your First Endpoint
+                    </div>
+                </div>
+
+                <!-- Step 1: Generate API key -->
+                <div x-show="wizardStep === 1" class="p-8">
+                    <h2 class="text-xl font-bold text-slate-800 mb-2">Welcome! Let's get you set up.</h2>
+                    <p class="text-slate-500 mb-6 text-sm leading-relaxed">
+                        This service protects its admin API with a secret key stored on the server. First, generate your service key. It will be saved automatically in your browser session so you won't need to enter it again on this device.
+                    </p>
+
+                    <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 mb-6">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Key Label</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="wizardKeyName" placeholder="e.g. admin"
+                                   class="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button type="button" @click="wizardGenerateKey()"
+                                    class="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                                Generate Key
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Generated key display -->
+                    <div x-show="wizardKeyGenerated" x-transition class="bg-amber-50 border border-amber-300 rounded-xl p-4 mb-6">
+                        <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">⚠️ Copy this key — it won't be shown again</p>
+                        <div class="flex items-center gap-2">
+                            <input type="text" x-model="generatedApiKey" readonly
+                                   class="flex-1 px-3.5 py-2 bg-white border border-amber-200 rounded-xl font-mono text-sm">
+                            <button type="button" @click="wizardCopyKey()"
+                                    class="px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-xl hover:bg-amber-700 transition-colors">Copy</button>
+                        </div>
+                        <p class="text-xs text-amber-600 mt-2">Your browser has been authenticated. Continue to add your WordPress endpoint.</p>
+                    </div>
+
+                    <button type="button" @click="wizardNextStep()"
+                            :disabled="!wizardKeyGenerated"
+                            class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        Continue to Step 2 →
+                    </button>
+                </div>
+
+                <!-- Step 2: Add first endpoint -->
+                <div x-show="wizardStep === 2" class="p-8">
+                    <h2 class="text-xl font-bold text-slate-800 mb-2">Add Your First WordPress Site</h2>
+                    <p class="text-slate-500 mb-6 text-sm leading-relaxed">
+                        Enter the details for the WordPress site this service will authenticate against. You can add more sites later.
+                    </p>
+                    <form @submit.prevent="wizardSaveEndpoint" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Profile Name</label>
+                                <input id="profile-name-input" type="text" x-model="formEndpoint.name" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="e.g. Production CMS">
+                                <p class="text-xs text-slate-400 mt-1">A short label for this connection</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">WordPress Site URL</label>
+                                <input type="url" x-model="formEndpoint.wp_root_url" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="https://example.com">
+                                <p class="text-xs text-slate-400 mt-1">Root URL of your WordPress install</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Application Name</label>
+                                <input type="text" x-model="formEndpoint.app_name" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="My App">
+                                <p class="text-xs text-slate-400 mt-1">Shown to users on the WordPress auth screen</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Callback URL</label>
+                                <input type="url" x-model="formEndpoint.callback_url" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="https://myapp.com/auth/callback">
+                                <p class="text-xs text-slate-400 mt-1">Where WordPress sends credentials after auth</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 pt-4 border-t border-slate-100">
+                            <button type="submit"
+                                    class="flex-1 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                                Save & Finish Setup
+                            </button>
+                            <button type="button" @click="wizardSkipEndpoint()"
+                                    class="px-5 py-3 bg-slate-100 text-slate-600 text-sm rounded-xl hover:bg-slate-200 transition-colors">
+                                Skip for now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- REGULAR 4-STEP ONBOARDING WIZARD -->
+            <div x-show="!isFirstRun" class="space-y-6">
+                <div class="glass-card rounded-2xl shadow-sm p-6">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">4-Step Plugin Connection & App Data Onboarding</h2>
+                        <p class="text-sm text-slate-500">Verify end-to-end integration between WordPress, plugin bridge, and local FastAPI proxy.</p>
+                    </div>
+
+                    <!-- Next Steps Guidance Banner (Displayed when all 4 steps complete) -->
+                    <div x-show="onboardStatus.step1 && onboardStatus.step2 && onboardStatus.step3 && onboardStatus.step4" x-transition class="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300 rounded-2xl mb-6 text-slate-800 shadow-sm">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-xl">🎉</span>
+                            <h3 class="font-bold text-emerald-900 text-base">All 4 Integration Steps Complete! Next Steps & Developer Options:</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-3">Your WordPress site, plugin bridge, and auth service are fully connected. Choose how you wish to proceed:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                            <div class="p-3 bg-white/90 border border-emerald-200 rounded-xl shadow-xs">
+                                <strong class="text-emerald-800 block mb-1">Option A: Local Dev Proxy</strong>
+                                Keep running this service (<code>http://localhost:8000</code>). Your local apps can send credentials here for validation & session storage.
+                            </div>
+                            <div class="p-3 bg-white/90 border border-emerald-200 rounded-xl shadow-xs">
+                                <strong class="text-emerald-800 block mb-1">Option B: Direct Library Integration</strong>
+                                Import <code>wp_auth_lib</code> directly into your Python/Node/Go app code for production without running a local service.
+                            </div>
+                            <div class="p-3 bg-white/90 border border-emerald-200 rounded-xl shadow-xs">
+                                <strong class="text-emerald-800 block mb-1">Option C: Manage Multi-Site Endpoints</strong>
+                                Go to the <a href="/endpoints" @click.prevent="switchTab('endpoints')" class="text-blue-600 underline font-semibold">Endpoints</a> tab to add additional WordPress environments.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <!-- Step 1 Card -->
+                        <div class="p-4 border rounded-2xl transition-all" :class="onboardStatus.step1 ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/50'">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 1</span>
+                                <span x-show="onboardStatus.step1" class="text-xs font-bold text-emerald-600">✓ Active</span>
+                                <span x-show="showPluginGuide" class="text-xs font-bold text-amber-600">⚠ Installation Needed</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-sm mb-1">1. Plugin Liveness Probe</h3>
+                            <p class="text-xs text-slate-500 mb-3">Checks if <code>wp-app-bridge</code> plugin is active on target site.</p>
+                            
+                            <div class="flex gap-2 flex-wrap">
+                                <button type="button" @click="runStep1PluginCheck()"
+                                        :class="onboardStatus.step1 ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-blue-600 text-white hover:bg-blue-700'"
+                                        class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors">
+                                    <span x-show="onboardStatus.step1">Re-probe Plugin</span>
+                                    <span x-show="!onboardStatus.step1">Run Plugin Check</span>
+                                </button>
+                                <a href="/api/v1/plugin/download" download
+                                   class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center gap-1">
+                                    ⬇ Download Plugin Zip
+                                </a>
+                            </div>
+
+                            <!-- Guided Instructions (shown when plugin probe fails) -->
+                            <div x-show="showPluginGuide" x-transition class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-2">
+                                <p class="font-bold text-amber-800">📋 How to install & activate:</p>
+                                <ol class="list-decimal list-inside text-amber-900 space-y-1">
+                                    <li>Click <strong>Download Plugin Zip</strong> above.</li>
+                                    <li>Go to your WordPress site: <code class="font-mono bg-white px-1 py-0.5 rounded border border-amber-200" x-text="(getTargetEndpoint().wp_root_url || 'https://yoursite.com') + '/wp-admin/plugin-install.php'"></code></li>
+                                    <li>Click <strong>Upload Plugin</strong> → Select <code>wp-app-bridge.zip</code> → <strong>Install Now</strong>.</li>
+                                    <li>Click <strong>Activate Plugin</strong>.</li>
+                                    <li>Return here and click <strong>Run Plugin Check</strong>.</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 Card -->
+                        <div class="p-4 border rounded-2xl transition-all" :class="onboardStatus.step2 ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/50'">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 2</span>
+                                <span x-show="onboardStatus.step2" class="text-xs font-bold text-emerald-600">✓ Authorized</span>
+                                <span x-show="!onboardStatus.step2" class="text-xs font-bold text-slate-400">○ Pending</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-sm mb-1">2. Localhost Callback OAuth</h3>
+                            <p class="text-xs text-slate-500 mb-3" x-show="!onboardStatus.step2">Opens WP authorization flow with redirect to <code>localhost:8000</code>.</p>
+                            <div x-show="onboardStatus.step2" class="mb-3 p-2.5 bg-emerald-100/80 border border-emerald-300 rounded-xl text-xs text-emerald-800 leading-relaxed">
+                                <strong>✓ App credentials captured</strong> for user <code class="font-mono bg-white px-1 py-0.5 rounded border border-emerald-300" x-text="capturedCreds?.user_login || 'WP User'"></code>. You do not need to create a duplicate app in WordPress.
+                            </div>
+                            <button type="button" @click="runStep2OAuthFlow()"
+                                    :class="onboardStatus.step2 ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-blue-600 text-white hover:bg-blue-700'"
+                                    class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors">
+                                <span x-show="!onboardStatus.step2">Launch WP Auth</span>
+                                <span x-show="onboardStatus.step2">Re-authorize in WP (Optional)</span>
+                            </button>
+                        </div>
+
+                        <!-- Step 3 Card -->
+                        <div class="p-4 border rounded-2xl transition-all" :class="onboardStatus.step3 ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/50'">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 3</span>
+                                <span x-show="onboardStatus.step3" class="text-xs font-bold text-emerald-600">✓ Verified</span>
+                                <span x-show="!onboardStatus.step3" class="text-xs font-bold text-slate-400">○ Pending</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-sm mb-1">3. Credential Validation</h3>
+                            <p class="text-xs text-slate-500 mb-3">Validates captured credentials against WP REST API (<code>/users/me</code>).</p>
+                            <button type="button" @click="runStep3Validate()"
+                                    class="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                Validate Credentials
+                            </button>
+                        </div>
+
+                        <!-- Step 4 Card -->
+                        <div class="p-4 border rounded-2xl transition-all" :class="onboardStatus.step4 ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/50'">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 4</span>
+                                <span x-show="onboardStatus.step4" class="text-xs font-bold text-emerald-600">✓ Round-trip OK</span>
+                                <span x-show="!onboardStatus.step4" class="text-xs font-bold text-slate-400">○ Pending</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-sm mb-1">4. App Data Session Loop</h3>
+                            <p class="text-xs text-slate-500 mb-3">Writes test payload to WP DB via plugin bridge & reads it back.</p>
+                            <button type="button" @click="runStep4AppDataTest()"
+                                    class="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                Test Data Loop
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Onboarding Console Log Output -->
+                    <div class="bg-slate-900 text-slate-200 p-4 rounded-2xl font-mono text-xs overflow-x-auto shadow-inner">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+                            <span class="text-slate-400 font-bold">Diagnostics Log</span>
+                            <button type="button" @click="clearOnboardLogs()" x-show="onboardLogs.length > 0"
+                                    class="text-[11px] text-slate-400 hover:text-red-400 px-2 py-0.5 rounded border border-slate-800 hover:border-red-900 bg-slate-800/50 transition-colors">
+                                🧹 Clear Console
+                            </button>
+                        </div>
+                        <div x-show="onboardLogs.length === 0" class="text-slate-600 italic">Run checks above to populate verification logs.</div>
+                        <template x-for="log in onboardLogs">
+                            <div class="py-0.5" :class="log.type === 'error' ? 'text-red-400' : (log.type === 'success' ? 'text-emerald-400' : 'text-slate-300')" x-text="log.text"></div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /onboarding tab -->
+
+        <!-- ============================================================ -->
+        <!-- ENDPOINTS TAB                                                 -->
+        <!-- ============================================================ -->
+        <div x-show="currentTab === 'endpoints'" x-transition class="space-y-6">
+
+            <!-- Active endpoint quick-view card -->
+            <div x-show="activeEndpoint && !showEndpointForm" x-transition
+                 class="glass-card rounded-2xl border border-blue-200/80 shadow-sm p-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-bold text-blue-500 uppercase tracking-wider">Active Endpoint</span>
+                            <span :class="activeEndpoint?.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-amber-100 text-amber-700 border-amber-300'"
+                                  class="px-2.5 py-0.5 rounded-full text-xs font-semibold border"
+                                  x-text="activeEndpoint?.status === 'confirmed' ? '✓ Reachable' : '⚠ Unconfirmed'"></span>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-800" x-text="activeEndpoint?.name"></h2>
+                        <p class="text-sm text-slate-500 font-mono" x-text="activeEndpoint?.wp_root_url"></p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" @click="confirmEndpoint(activeEndpoint.id)"
+                                class="px-3.5 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
+                            Test Reachability
+                        </button>
+                        <button type="button" @click="editEndpoint(activeEndpoint)"
+                                class="px-3.5 py-1.5 text-xs font-semibold bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors">
+                            Quick Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endpoints panel -->
+            <div class="glass-card rounded-2xl shadow-sm p-6">
+                <div class="flex justify-between items-center mb-5">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Endpoint Profiles</h2>
+                        <p class="text-sm text-slate-400">All configured WordPress site connections</p>
+                    </div>
+                    <button type="button" @click="openNewEndpointForm()"
+                            class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors">
+                        + Add Endpoint
+                    </button>
+                </div>
+
+                <!-- Inline form panel -->
+                <div x-show="showEndpointForm" x-transition
+                     class="mb-6 p-5 bg-blue-50/70 border border-blue-200 rounded-2xl">
+                    <h3 class="text-base font-bold text-blue-900 mb-4"
+                        x-text="formEndpoint.id ? 'Edit Endpoint Profile' : 'New Endpoint Profile'"></h3>
+                    <form @submit.prevent="saveEndpoint" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Profile Name</label>
+                                <input id="profile-name-input" type="text" x-model="formEndpoint.name" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="e.g. Staging CMS">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">WordPress Site URL</label>
+                                <input type="url" x-model="formEndpoint.wp_root_url" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="https://example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Application Name</label>
+                                <input type="text" x-model="formEndpoint.app_name" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="My App">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Callback URL</label>
+                                <input type="url" x-model="formEndpoint.callback_url" required
+                                       class="w-full px-3.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                       placeholder="https://myapp.com/callback">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="form-active" x-model="formEndpoint.is_active"
+                                   class="rounded border-slate-300">
+                            <label for="form-active" class="text-sm text-slate-700">Set as active primary endpoint</label>
+                        </div>
+                        <div class="flex gap-3 pt-3 border-t border-blue-200">
+                            <button type="submit"
+                                    class="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                                Save Endpoint
+                            </button>
+                            <button type="button" @click="cancelEndpointForm()"
+                                    class="px-4 py-2 bg-white text-slate-700 text-sm rounded-xl border border-slate-300 hover:bg-slate-50 transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Empty state — only shown when form is closed and no endpoints -->
+                <div x-show="endpoints.length === 0 && !showEndpointForm"
+                     class="py-12 text-center bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                    <p class="text-slate-500 mb-3 text-sm">No WordPress endpoints configured yet</p>
+                    <button type="button" @click="openNewEndpointForm()"
+                            class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                        + Add Your First Endpoint
+                    </button>
+                </div>
+
+                <!-- Endpoint cards -->
+                <div x-show="endpoints.length > 0" class="space-y-4">
+                    <template x-for="ep in endpoints" :key="ep.id">
+                        <div class="border rounded-2xl p-4 bg-white/90 hover:border-blue-300 transition-colors flex flex-col md:flex-row justify-between md:items-center gap-3"
+                             :class="ep.is_active ? 'border-blue-200 bg-blue-50/30' : 'border-slate-200'">
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="font-bold text-slate-800" x-text="ep.name"></h3>
+                                    <span :class="ep.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-amber-100 text-amber-700 border-amber-300'"
+                                          class="px-2.5 py-0.5 rounded-full text-xs font-semibold border"
+                                          x-text="ep.status === 'confirmed' ? '✓ Confirmed' : '⚠ Unconfirmed'"></span>
+                                    <span x-show="ep.is_active"
+                                          class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-300">
+                                        ★ Active
+                                    </span>
+                                </div>
+                                <p class="text-sm text-slate-500 font-mono" x-text="ep.wp_root_url"></p>
+                                <p class="text-xs text-slate-400">
+                                    App: <span x-text="ep.app_name"></span>
+                                    &nbsp;·&nbsp; Callback: <span class="font-mono" x-text="ep.callback_url"></span>
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" @click="confirmEndpoint(ep.id)"
+                                        class="px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors">
+                                    Test Reachability
+                                </button>
+                                <button type="button" x-show="!ep.is_active" @click="makeActiveEndpoint(ep.id)"
+                                        class="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors">
+                                    Make Active
+                                </button>
+                                <button type="button" @click="cloneEndpoint(ep.id)"
+                                        class="px-3 py-1.5 text-xs font-semibold bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-xl transition-colors">
+                                    Clone
+                                </button>
+                                <button type="button" @click="editEndpoint(ep)"
+                                        class="px-3 py-1.5 text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl transition-colors">
+                                    Edit
+                                </button>
+                                <button type="button" @click="deleteEndpoint(ep.id)"
+                                        class="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl transition-colors">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div><!-- /endpoints tab -->
+
+        <!-- ============================================================ -->
+        <!-- API KEYS TAB                                                  -->
+        <!-- ============================================================ -->
+        <div x-show="currentTab === 'api-keys'" x-transition class="space-y-6">
+            <div class="glass-card rounded-2xl shadow-sm p-6">
+                <h2 class="text-lg font-bold text-slate-800 mb-1">API Key Management</h2>
+
+                <!-- Contextual explanation banner -->
+                <div class="mb-5 p-4 bg-blue-50/70 border border-blue-200 rounded-xl text-sm text-blue-800 leading-relaxed">
+                    <strong>How keys work:</strong> These keys protect this admin dashboard's API. Your browser must present an active key (the <em>Session Key</em> shown top-right) to save endpoints and access any protected route. Keys older than <strong>30 days are automatically removed</strong>. You should have at most one or two active keys — rotate them by generating a new one and revoking the old.
+                    <div class="mt-2 flex items-center gap-2">
+                        <span class="font-semibold">Current session key:</span>
+                        <span x-show="apiKey" class="px-2.5 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-full text-xs font-mono" x-text="apiKey.slice(0, 8) + '…'"></span>
+                        <span x-show="!apiKey" class="px-2.5 py-0.5 bg-amber-100 text-amber-700 border border-amber-300 rounded-full text-xs font-semibold">Not set</span>
+                    </div>
+                </div>
+
+                <!-- Generate key form -->
+                <div class="mb-6 p-4 bg-slate-50/80 rounded-xl border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-700 mb-3">Generate New Key</h3>
+                    <div class="flex gap-2">
+                        <input type="text" x-model="newKeyName"
+                               class="flex-1 px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               placeholder="Key label (e.g. admin, rotated-2024)">
+                        <button type="button" @click="generateApiKey()"
+                                class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-colors">
+                            Generate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Newly generated key -->
+                <div x-show="generatedApiKey" x-transition class="mb-5 p-4 bg-amber-50 border border-amber-300 rounded-xl">
+                    <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">⚠️ Copy now — won't be shown again</p>
+                    <div class="flex gap-2">
+                        <input type="text" x-model="generatedApiKey" readonly
+                               class="flex-1 px-3.5 py-2 bg-white border border-amber-200 rounded-xl font-mono text-sm">
+                        <button type="button" @click="copyApiKey()"
+                                class="px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-xl hover:bg-amber-700 transition-colors">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Existing keys table -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-slate-700">Stored Keys</h3>
+                        <!-- Bulk actions -->
+                        <div x-show="apiKeys.length > 0" class="flex items-center gap-2">
+                            <button type="button" @click="selectedKeys = apiKeys.map(k => k.key_preview)"
+                                    class="text-xs text-blue-600 hover:underline">Select all</button>
+                            <span class="text-slate-300">·</span>
+                            <button type="button" @click="selectedKeys = []"
+                                    class="text-xs text-slate-500 hover:underline">Deselect all</button>
+                            <span class="text-slate-300">·</span>
+                            <button type="button" x-show="selectedKeys.length > 0"
+                                    @click="bulkRevokeKeys()"
+                                    class="text-xs font-semibold text-red-600 hover:text-red-800 bg-red-50 border border-red-200 px-2 py-0.5 rounded-lg">
+                                Delete selected (<span x-text="selectedKeys.length"></span>)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Empty state for keys table -->
+                    <div x-show="apiKeys.length === 0" class="text-slate-400 text-sm italic py-8 text-center bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                        No API keys stored yet. Generate one above to protect endpoints.
+                    </div>
+
+                    <table x-show="apiKeys.length > 0" class="w-full text-sm">
+                        <thead>
+                        <tr class="border-b border-slate-200 text-xs text-slate-400 uppercase tracking-wider">
+                            <th class="py-2 px-2 w-8">
+                                <input type="checkbox"
+                                       :checked="selectedKeys.length === apiKeys.length && apiKeys.length > 0"
+                                       :indeterminate.prop="selectedKeys.length > 0 && selectedKeys.length < apiKeys.length"
+                                       @change="selectedKeys.length === apiKeys.length ? selectedKeys = [] : selectedKeys = apiKeys.map(k => k.key_preview)"
+                                       class="rounded border-slate-300 cursor-pointer">
+                            </th>
+                            <th class="text-left py-2 px-3">Label</th>
+                            <th class="text-left py-2 px-3">Preview</th>
+                            <th class="text-left py-2 px-3">Created</th>
+                            <th class="text-left py-2 px-3">Last Used</th>
+                            <th class="py-2 px-3"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <template x-for="key in apiKeys" :key="key.key_preview">
+                            <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors"
+                                :class="selectedKeys.includes(key.key_preview) ? 'bg-red-50/40' : ''">
+                                <td class="py-2 px-2">
+                                    <input type="checkbox"
+                                           :value="key.key_preview"
+                                           x-model="selectedKeys"
+                                           class="rounded border-slate-300 cursor-pointer">
+                                </td>
+                                <td class="py-2 px-3 font-medium" x-text="key.name"></td>
+                                <td class="py-2 px-3 font-mono text-slate-500" x-text="key.key_preview"></td>
+                                <td class="py-2 px-3 text-slate-500" x-text="formatDate(key.created_at)"></td>
+                                <td class="py-2 px-3 text-slate-500" x-text="key.last_used ? formatDate(key.last_used) : 'Never'"></td>
+                                <td class="py-2 px-3 text-right">
+                                    <button type="button" @click="revokeApiKey(key.key_preview)"
+                                            class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors">Revoke</button>
+                                </td>
+                            </tr>
+                        </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /api-keys tab -->
+
+        <!-- ============================================================ -->
+        <!-- TEST AUTH FLOW TAB                                            -->
+        <!-- ============================================================ -->
+        <div x-show="currentTab === 'test'" x-transition class="space-y-6">
+            <!-- Information & Guidance Header -->
+            <div class="bg-blue-50/70 rounded-2xl border border-blue-200 p-5">
+                <div class="flex items-start gap-3">
+                    <div class="p-2 bg-blue-600 text-white rounded-xl text-lg">🧪</div>
+                    <div class="flex-1">
+                        <h2 class="text-base font-bold text-slate-800">Test & Monitor Authentication Flow</h2>
+                        <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                            Verify your WordPress connection in the sandbox harness, or monitor real-time auth events incoming from your own application.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARCHITECTURE MODE SELECTOR -->
+            <div class="glass-card rounded-2xl shadow-sm p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Authentication Architecture Mode:</span>
+                    <span class="text-xs text-slate-500">Choose how your application connects to WordPress</span>
+                </div>
+                <div class="flex gap-2 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200/80 self-start md:self-auto">
+                    <button type="button" @click="authArchitectureMode = 'proxy'; generateTestAuthUrl();"
+                            :class="authArchitectureMode === 'proxy' ? 'bg-blue-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                            class="px-3.5 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1.5">
+                        ⚙️ Local Dev Proxy <span class="text-[10px] opacity-80">(localhost:8000)</span>
+                    </button>
+                    <button type="button" @click="authArchitectureMode = 'direct'; generateTestAuthUrl();"
+                            :class="authArchitectureMode === 'direct' ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+                            class="px-3.5 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1.5">
+                        🚀 Direct Production WP <span class="text-[10px] opacity-80">(No proxy)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE SANDBOX TEST -->
+            <div class="glass-card rounded-2xl shadow-sm p-6 space-y-6">
+                <!-- Sandbox step 1 -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Step 1 — Generate Auth URL</span>
+                        <span x-show="authArchitectureMode === 'proxy'" class="text-[11px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">Proxy Mode</span>
+                        <span x-show="authArchitectureMode === 'direct'" class="text-[11px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Direct Mode</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" x-model="testAuthUrl" readonly
+                               class="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs">
+                        <button type="button" @click="copyToClipboard(testAuthUrl)"
+                                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition-colors">
+                            Copy
+                        </button>
+                        <a :href="testAuthUrl" target="_blank"
+                           class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center gap-1">
+                            Launch Auth ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Sandbox step 2 -->
+                <div class="border-t border-slate-100 pt-5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">Step 2 — Callback Payload Handling</span>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" x-model="testCallbackUrl" placeholder="Paste full callback URL (e.g. http://localhost:8000/callback?user_login=...)"
+                               class="flex-1 px-3.5 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <button type="button" @click="parseTestCallback()"
+                                class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors">
+                            Parse URL
+                        </button>
+                    </div>
+
+                    <!-- Parsed result -->
+                    <div x-show="parsedCallback.user_login" x-transition class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1 font-mono">
+                        <p class="text-slate-500 font-bold font-sans uppercase tracking-wider text-[10px] mb-1">Parsed Parameters:</p>
+                        <p>user_login: <span class="text-slate-800 font-bold" x-text="parsedCallback.user_login"></span></p>
+                        <p>password: <span class="text-slate-800 font-bold" x-text="parsedCallback.password ? '••••••••••••••••' : 'None'"></span></p>
+                        <p>site_url: <span class="text-slate-800 font-bold" x-text="parsedCallback.site_url || 'N/A'"></span></p>
+                    </div>
+                </div>
+
+                <!-- Sandbox step 3 -->
+                <div class="border-t border-slate-100 pt-5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">Step 3 — Validate Credentials</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" @click="validateTestCredentials()"
+                                :disabled="!parsedCallback.user_login || !parsedCallback.password"
+                                class="px-5 py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                            Validate Credentials
+                        </button>
+                        <span x-show="!parsedCallback.user_login" class="text-xs text-slate-400 italic">Complete Step 2 callback payload first</span>
+                    </div>
+
+                    <!-- Validation Result -->
+                    <div x-show="validationResult.status || validationResult.user_id" x-transition class="mt-4">
+                        <div :class="validationResult?.is_valid ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'"
+                             class="p-4 border rounded-xl text-xs">
+                            <p class="font-semibold text-sm" x-text="validationResult?.is_valid ? '✓ Credentials valid' : '✗ Invalid credentials'"></p>
+                            <div x-show="validationResult?.is_valid" class="mt-2 space-y-1 text-slate-700 font-mono">
+                                <p>User ID: <span class="font-bold" x-text="validationResult?.user_id || ''"></span></p>
+                                <p>Username: <span class="font-bold" x-text="validationResult?.username || ''"></span></p>
+                                <p>Email: <span class="font-bold" x-text="validationResult?.email || ''"></span></p>
+                                <p>Roles: <span class="font-bold" x-text="validationResult?.roles ? validationResult.roles.join(', ') : ''"></span></p>
+                            </div>
+                            <p x-show="validationResult && !validationResult.is_valid"
+                               class="text-red-600 mt-1 font-medium" x-text="validationResult?.error_message || ''"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drop-in Code Snippets Card (Context Aware) -->
+            <div class="glass-card rounded-2xl shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Drop-in Client Integration Snippets</h2>
+                        <p class="text-xs text-slate-500">
+                            Copy pre-configured code into your app. Snippets update based on your selected 
+                            <strong class="text-slate-700" x-text="authArchitectureMode === 'direct' ? 'Direct Production WP Mode' : 'Local Dev Proxy Mode'"></strong>.
+                        </p>
+                    </div>
+                    <button type="button" @click="copyToClipboard(getSnippet(codeLanguage))"
+                            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition-colors">
+                        📋 Copy Snippet
+                    </button>
+                </div>
+
+                <!-- Language Selection Tabs -->
+                <div class="flex gap-2 border-b border-slate-200 mb-4 pb-2">
+                    <button type="button" @click="codeLanguage = 'python'"
+                            :class="langTabClass('python')"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                        Python
+                    </button>
+                    <button type="button" @click="codeLanguage = 'php'"
+                            :class="langTabClass('php')"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                        PHP
+                    </button>
+                    <button type="button" @click="codeLanguage = 'node'"
+                            :class="langTabClass('node')"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                        Node.js
+                    </button>
+                    <button type="button" @click="codeLanguage = 'flutter'"
+                            :class="langTabClass('flutter')"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors">
+                        Flutter
+                    </button>
+                </div>
+
+                <!-- Code View -->
+                <div class="bg-slate-900 text-slate-100 rounded-2xl p-4 font-mono text-xs overflow-x-auto shadow-inner">
+                    <pre x-text="getSnippet(codeLanguage)"></pre>
+                </div>
+            </div>
+        </div><!-- /test tab -->
+
+        <!-- ============================================================ -->
+        <!-- ACTIVITY STREAM TAB                                          -->
+        <!-- ============================================================ -->
+        <div x-show="currentTab === 'activity'" x-transition class="space-y-6">
+            <div class="glass-card rounded-2xl shadow-sm p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 tracking-tight">⚡ Live Activity Stream</h2>
+                        <p class="text-sm text-slate-500">Persistent running log of authorization events & REST API activity (stored 14 days).</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 flex-wrap self-start md:self-auto">
+                        <button type="button" @click="loadActivityLogs()"
+                                class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition-colors inline-flex items-center gap-1">
+                            🔄 Refresh
+                        </button>
+                        <button type="button" @click="clearActivityLogs(true)"
+                                class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-xl border border-amber-300 transition-colors inline-flex items-center gap-1">
+                            🗑️ Delete Test Logs
+                        </button>
+                        <button type="button" @click="clearActivityLogs(false)"
+                                class="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-xl border border-red-200 transition-colors inline-flex items-center gap-1">
+                            🗑️ Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Pills Bar -->
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Filter:</span>
+                    <button type="button" @click="activityFilter = 'all'; loadActivityLogs();"
+                            :class="activityFilter === 'all' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-3 py-1 rounded-full text-xs font-medium transition-colors">
+                        All Logs
+                    </button>
+                    <button type="button" @click="activityFilter = 'real_only'; loadActivityLogs();"
+                            :class="activityFilter === 'real_only' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-3 py-1 rounded-full text-xs font-medium transition-colors">
+                        Real Auth Events Only
+                    </button>
+                    <button type="button" @click="activityFilter = 'tests_only'; loadActivityLogs();"
+                            :class="activityFilter === 'tests_only' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-3 py-1 rounded-full text-xs font-medium transition-colors">
+                        Test Runs Only
+                    </button>
+                </div>
+
+                <!-- Logs Table -->
+                <div class="overflow-x-auto border border-slate-200/80 rounded-2xl">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
+                                <th class="py-3 px-4">Time</th>
+                                <th class="py-3 px-4">Action</th>
+                                <th class="py-3 px-4">Type</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4">Endpoint</th>
+                                <th class="py-3 px-4">IP Address</th>
+                                <th class="py-3 px-4 text-right">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <template x-if="activityLogs.length === 0">
+                                <tr>
+                                    <td colspan="7" class="py-12 text-center text-slate-400 font-sans text-sm italic">
+                                        No activity logs recorded yet. Run checks or auth tests to generate events.
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-for="log in activityLogs" :key="log.id">
+                                <tr class="hover:bg-blue-50/50 transition-colors cursor-pointer" @click="openLogDetails(log)">
+                                    <td class="py-3 px-4 text-slate-500 font-mono text-[11px]" x-text="log.datetime"></td>
+                                    <td class="py-3 px-4 font-bold text-slate-800 font-sans" x-text="log.action"></td>
+                                    <td class="py-3 px-4">
+                                        <span x-show="log.is_test" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">🧪 TEST</span>
+                                        <span x-show="!log.is_test" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">🔐 AUTH</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider border"
+                                              :class="log.status === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-red-50 text-red-700 border-red-300'"
+                                              x-text="log.status"></span>
+                                    </td>
+                                    <td class="py-3 px-4 text-slate-600 font-sans" x-text="log.endpoint_id"></td>
+                                    <td class="py-3 px-4 text-slate-500 font-mono text-[11px]" x-text="log.ip_address"></td>
+                                    <td class="py-3 px-4 text-right">
+                                        <button type="button" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg text-[11px] border border-slate-200 transition-colors">
+                                            Inspect 🔍
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div><!-- /activity tab -->
+
+        <!-- ===== CONTEXTUAL SLIDE-OVER DRAWER FOR LOG INSPECTION ===== -->
+        <div x-show="selectedLog" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex justify-end">
+            <div @click.away="selectedLog = null"
+                 x-transition:enter="transition ease-out duration-250 transform"
+                 x-transition:enter-start="translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="translate-x-full"
+                 class="bg-white w-full max-w-xl h-full shadow-2xl p-6 overflow-y-auto space-y-4 border-l border-slate-200 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-200">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            🔍 Activity Log Inspector
+                        </h3>
+                        <button type="button" @click="selectedLog = null"
+                                class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl border border-slate-300 transition-colors">
+                            ✕ Close
+                        </button>
+                    </div>
+                    <template x-if="selectedLog">
+                        <div class="space-y-4 text-xs">
+                            <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Log ID</span><code class="font-mono text-slate-800 font-bold" x-text="selectedLog.id"></code></div>
+                                <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Timestamp</span><span class="text-slate-700 font-mono" x-text="selectedLog.datetime"></span></div>
+                                <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Action</span><span class="font-bold text-slate-800" x-text="selectedLog.action"></span></div>
+                                <div><span class="text-slate-400 block text-[10px] uppercase font-bold">Status</span><span class="font-bold uppercase" :class="selectedLog.status === 'success' ? 'text-emerald-600' : 'text-red-600'" x-text="selectedLog.status"></span></div>
+                            </div>
+                            <div>
+                                <span class="font-bold text-slate-700 block mb-2 text-sm">Full Event Payload & Metadata:</span>
+                                <pre class="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] leading-relaxed overflow-x-auto shadow-inner" x-text="JSON.stringify(selectedLog.details, null, 2)"></pre>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="pt-4 border-t border-slate-200 flex justify-end">
+                    <button type="button" @click="selectedLog = null" class="px-5 py-2.5 bg-slate-800 text-white font-semibold text-xs rounded-xl hover:bg-slate-900 transition-colors">
+                        Done Inspecting
+                    </button>
+                </div>
+            </div>
+        </div>
+
+</div><!-- /container -->
+</body>
+</html>
