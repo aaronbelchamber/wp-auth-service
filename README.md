@@ -1,8 +1,12 @@
 # WordPress Plugins Monorepo
 
+> Built by [Aaron Belchamber](https://belchamber.us) — Business Growth & Cloud Systems Architect
+> Part of a WordPress plugin family for turning any WP site into a reusable auth/data backend. See also: [wordpress-site-manager](https://github.com/aaronbelchamber/wordpress-site-manager) — multi-site deployment and data governance layer built on this auth core.
+> More: [Brandager.com](https://brandager.com) · [Belchamber.us](https://belchamber.us) · [Tools.Belchamber.us](https://tools.belchamber.us)
+
 A collection of WordPress plugins and companion services built to extend any WordPress site into a **reusable auth and data-storage backend for custom applications**. Everything here is designed to be lightweight, low-maintenance, and plug-and-play — authentication stays out of the way so development focus stays on the apps themselves.
 
-**Quick links:** [Contributing & Versioning](CONTRIBUTING.md) · [Project Overview](docs/project-overview.md) · [Auth Service README](auth-service/README.md)
+**Quick links:** [Contributing & Versioning](CONTRIBUTING.md) · [Project Overview](docs/project-overview.md) · [Auth Service README](auth-service/README.md) · [Architecture & Design](auth-service/docs/architecture.md)
 
 ---
 
@@ -26,7 +30,26 @@ A standalone Python auth service that lets any custom application authenticate i
 **Key docs:**
 
 - 📖 [README — Setup & API reference](auth-service/README.md)
+- 🏗️ [Architecture & Design](auth-service/docs/architecture.md)
 - ☁️ [Cloud Deployment Guide](auth-service/CLOUD_DEPLOYMENT.md)
+
+---
+
+## 🧠 Design Decisions
+
+*The reasoning behind the choices that shape this project — not just what it does, but why it's built this way.*
+
+**Why WordPress Application Passwords instead of a custom OAuth plugin?**
+
+WordPress 5.6+ ships a native Application Passwords flow. Building a parallel OAuth implementation would mean owning token issuance, revocation, and a second attack surface — all logic WordPress core already maintains and patches. Piggybacking on the native flow means zero custom auth code lives on the WordPress side, and every security fix WordPress ships applies automatically.
+
+**Why split the auth logic (`wp_auth_lib`) from the API service (`wp_auth_service`)?**
+
+The library is storage-agnostic and UI-agnostic by design — it never opens a browser, never persists tokens, never assumes an HTTP context. That means it can be embedded directly in a Python app with zero network hop, *or* wrapped in the FastAPI service for non-Python consumers. The dependency rule (`wp_auth_lib` has zero external dependencies) keeps that boundary honest: if the library ever needs a third-party package, that's a signal the boundary has leaked.
+
+**Why is Redis optional rather than required?**
+
+Credential validation is cached to avoid hammering the WordPress REST API on every request. In-memory caching covers the common case (single-instance deployment) with no operational overhead. Redis is a drop-in upgrade for horizontally scaled deployments — the cache interface doesn't change, only the backend. This keeps the barrier to running the service locally at zero while not blocking production scale-out.
 
 ---
 
@@ -97,6 +120,8 @@ Interactive docs: `http://localhost:8000/docs` (when running locally)
 4. App calls `/api/v1/auth/callback` → extracts `user_login` + `app_password`
 5. App calls `/api/v1/auth/validate` → verifies credentials, returns user profile
 6. App stores credentials and uses them for subsequent calls to `/wp-json/app/v1/session`
+
+For the full component breakdown and error-handling model, see **[Architecture & Design](auth-service/docs/architecture.md)**.
 
 ---
 
@@ -180,7 +205,7 @@ plugins/
 │   └── project-overview.md         ← Project goals, design decisions, future directions
 ├── auth-service/                    ← Auth service root
 │   ├── README.md                    ← Full setup & API reference
-│   ├── ARCHITECTURE.md              ← Component architecture & data flow
+│   ├── docs/architecture.md         ← Component architecture & data flow
 │   ├── CLOUD_DEPLOYMENT.md          ← Docker / cloud hosting guide
 │   ├── setup.ps1 / setup.sh         ← One-command setup scripts
 │   ├── requirements.txt
@@ -237,33 +262,6 @@ cd my-auth-service
 git remote set-url origin https://github.com/<your-username>/my-auth-service.git
 
 # 3. Push:
-git push -u origin main
-```
-
-### GitLab
-
-```bash
-git clone https://github.com/aaronbelchamber/wp-auth-service.git my-auth-service
-cd my-auth-service
-git remote set-url origin https://gitlab.com/<your-username>/my-auth-service.git
-git push -u origin main
-```
-
-### Bitbucket
-
-```bash
-git clone https://github.com/aaronbelchamber/wp-auth-service.git my-auth-service
-cd my-auth-service
-git remote set-url origin https://bitbucket.org/<your-username>/my-auth-service.git
-git push -u origin main
-```
-
-### Self-Hosted (Gitea, Forgejo, etc.)
-
-```bash
-git clone https://github.com/aaronbelchamber/wp-auth-service.git my-auth-service
-cd my-auth-service
-git remote set-url origin https://git.your-server.com/<your-username>/my-auth-service.git
 git push -u origin main
 ```
 
