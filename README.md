@@ -1,7 +1,7 @@
 # WordPress Plugins Monorepo
 
 > Built by [Aaron Belchamber](https://belchamber.us) — Business Growth & Cloud Systems Architect
-> Part of a WordPress plugin family for turning any WP site into a reusable auth/data backend. See also: [wordpress-site-manager](https://github.com/aaronbelchamber/wordpress-site-manager) — multi-site deployment and data governance layer built on this auth core.
+> A standalone plug-and-play authentication library — no dependency on any other project.
 > More: [Brandager.com](https://brandager.com) · [Belchamber.us](https://belchamber.us) · [Tools.Belchamber.us](https://tools.belchamber.us)
 
 A collection of WordPress plugins and companion services built to extend any WordPress site into a **reusable auth and data-storage backend for custom applications**. Everything here is designed to be lightweight, low-maintenance, and plug-and-play — authentication stays out of the way so development focus stays on the apps themselves.
