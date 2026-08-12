@@ -1,0 +1,28 @@
+name: auth_kit
+description: >
+  Drop-in, pluggable authentication SDK for Flutter apps that use the
+  wordpress-site-manager-private auth-service backend(s). Ships a
+  self-guided in-app login wizard and a swappable AuthProvider interface so
+  app code never hardcodes which auth backend is active.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: ^3.12.0
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.6.0
+  flutter_secure_storage: ^10.3.1
+  webview_flutter: ^4.10.0
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

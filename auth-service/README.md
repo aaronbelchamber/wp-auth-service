@@ -1,23 +1,28 @@
 # WordPress Auth Service
 
+> Built by [Aaron Belchamber](https://belchamber.us) — Business Growth & Cloud Systems Architect
+> Part of a WordPress plugin family for turning any WP site into a reusable auth/data backend. Pairs with [`belchamber-auth-bridge`](belchamber-auth-bridge/README.md) — the WordPress-side plugin this service talks to.
+> More: [Brandager.com](https://brandager.com) · [Belchamber.us](https://belchamber.us) · [Tools.Belchamber.us](https://tools.belchamber.us)
+
 A standalone authentication service that lets your application authenticate users with WordPress sites using the WordPress Application Passwords flow. Use it as a Python library in your app, or run it as a standalone service.
+
+Handles real credentials (multi-site SSH/deploy access) — see [DATA_SECURITY_GOVERNANCE.md](DATA_SECURITY_GOVERNANCE.md) before touching `sites.yaml` or `credentials.enc`.
 
 
 ## WordPress Prerequisites & Requirements
 
 > [!NOTE]
-> **Authentication** uses WordPress's native Application Passwords (built into WP 5.6+) — no plugin needed for auth alone.
-> **Session & state storage** (`/wp-json/app/v1/`) requires the `wp-app-bridge` plugin to be installed and activated on your WordPress site.
+> **You only need to install one WordPress plugin: `belchamber-auth-bridge`.** This "auth-service" project itself is *not* a WordPress plugin — it's a separate Python service you run wherever you like (your machine, a container, a cloud box). WordPress's native Application Passwords (built into WP 5.6+) handle credential validation with no plugin at all; `belchamber-auth-bridge` adds the one thing WP core doesn't provide — session storage — via its own `/wp-json/auth-bridge/v1/` REST routes.
 
 For the Application Passwords flow to work on your WordPress site:
 1. **WordPress Version**: WordPress 5.6 or higher.
 2. **HTTPS/SSL**: WordPress disables Application Passwords over plain HTTP by default. Your site must use `https://` (or have `WP_ENVIRONMENT_TYPE` set to `local`/`development` if testing locally on HTTP).
 3. **Authorization Endpoint**: The service constructs links to `{wp_root_url}/wp-admin/authorize-application.php`. Make sure `{wp_root_url}` points directly to the root of your WordPress site (e.g. `https://example.com`).
-4. **WP App Bridge Plugin** *(for session storage only)*: Copy `wp-app-bridge/wp-app-bridge.php` to your WordPress site's `wp-content/plugins/` directory and activate it in WP Admin.
+4. **Install `belchamber-auth-bridge`**: Copy `belchamber-auth-bridge/belchamber-auth-bridge.php` to your WordPress site's `wp-content/plugins/` directory and activate it in WP Admin. This is the only plugin required.
 
 ### ⚡ One-Liner Remote Plugin Deployment (`deploy_plugin.py`)
 
-Deploy updates to the `wp-app-bridge` WordPress plugin with a single command to any connected WordPress site (such as `tools.belchamber.us`). The deployer integrates seamlessly with `site-manager` config (`sites.yaml` & encrypted credentials):
+Deploy updates to the `belchamber-auth-bridge` WordPress plugin with a single command to any connected WordPress site (such as `tools.belchamber.us`). The deployer integrates seamlessly with `site-manager` config (`sites.yaml` & encrypted credentials):
 
 ```bash
 # 1. Deploy live update to tools.belchamber.us (auto-commits to GitHub & uploads via SFTP)
@@ -30,7 +35,7 @@ python deploy_plugin.py --site tools-belchamber-us --dry-run
 **What the one-liner does automatically:**
 1. **GitHub Cloud Backup**: Stages, commits, and pushes plugin updates to `https://github.com/aaronbelchamber/wp-auth-service`.
 2. **Site-Manager Integration**: Reads target site SSH details and decrypts credentials directly from `site-manager` (`sites.yaml` & `~/.wp_site_manager/credentials.enc`).
-3. **SFTP Direct Upload**: Uploads plugin files via Paramiko SFTP straight to `/wp-content/plugins/wp-app-bridge` on the target server.
+3. **SFTP Direct Upload**: Uploads plugin files via Paramiko SFTP straight to `/wp-content/plugins/belchamber-auth-bridge` on the target server.
 
 ---
 

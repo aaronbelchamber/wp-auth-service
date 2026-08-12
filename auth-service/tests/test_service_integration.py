@@ -224,7 +224,7 @@ class TestServiceIntegration(unittest.TestCase):
         self.assertEqual(creds.get("password"), "xxxx yyyy zzzz")
 
     def test_plugin_check_endpoint(self):
-        """Test POST /api/v1/endpoints/{id}/plugin-check endpoint probing WP App Bridge liveness."""
+        """Test POST /api/v1/endpoints/{id}/plugin-check endpoint probing Belchamber Auth Bridge liveness."""
         headers = {"X-API-Key": self.api_key}
         payload = {
             "name": "Plugin Probe Test Site",
@@ -240,14 +240,14 @@ class TestServiceIntegration(unittest.TestCase):
         with patch("httpx.AsyncClient.get") as mock_get:
             mock_res = MagicMock()
             mock_res.status_code = 200
-            mock_res.json.return_value = {"status": "active", "plugin": "wp-app-bridge", "version": "1.0.0"}
+            mock_res.json.return_value = {"status": "active", "plugin": "belchamber-auth-bridge", "version": "1.0.0"}
             mock_get.return_value = mock_res
 
             check_res = self.client.post(f"/api/v1/endpoints/{created['id']}/plugin-check")
             self.assertEqual(check_res.status_code, 200)
             data = check_res.json()
             self.assertTrue(data.get("is_plugin_active"))
-            self.assertEqual(data.get("details", {}).get("plugin"), "wp-app-bridge")
+            self.assertEqual(data.get("details", {}).get("plugin"), "belchamber-auth-bridge")
 
 
 if __name__ == "__main__":

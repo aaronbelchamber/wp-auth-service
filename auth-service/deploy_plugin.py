@@ -1,5 +1,5 @@
 """
-WP App Bridge Plugin Deployer.
+Plugin Deployer.
 
 Standalone deployment script that reads site configuration from the site-manager
 `sites.yaml` and `credentials.enc` files WITHOUT importing site-manager Python modules.
@@ -8,8 +8,12 @@ This decoupled design means changes to site-manager internals will never silentl
 break this deployer. Only the config file formats (sites.yaml / credentials.enc)
 act as the shared contract — and those are stable, versioned YAML/JSON structures.
 
+Deploys ANY plugin listed in plugins/plugin-manifest.json (the same manifest
+build-plugins.ps1, bump-version.ps1, and publish-plugin.ps1 read from), not
+just one hardcoded plugin — pass --plugin <slug>.
+
 Usage:
-    python deploy_plugin.py --site tools-belchamber-us [--dry-run] [--no-git]
+    python deploy_plugin.py --plugin belchamber-auth-bridge --site tools-belchamber-us [--dry-run] [--no-git]
 """
 
 import argparse
@@ -28,11 +32,25 @@ from typing import Optional
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
-PLUGIN_NAME = "wp-app-bridge"
-PLUGIN_SRC = Path(__file__).parent / "wp-app-bridge"
+PLUGINS_DIR = Path(__file__).resolve().parent.parent
+PLUGIN_MANIFEST_PATH = PLUGINS_DIR / "plugin-manifest.json"
 SITE_MANAGER_DIR = Path(__file__).resolve().parent.parent.parent / "site-manager"
 SITES_YAML = SITE_MANAGER_DIR / "config" / "sites.yaml"
 CREDENTIALS_ENC = Path.home() / ".wp_site_manager" / "credentials.enc"
+
+
+def resolve_plugin_src(plugin_slug: str) -> Path:
+    """Resolve a plugin slug to its source folder via plugin-manifest.json --
+    the same manifest build-plugins.ps1/bump-version.ps1/publish-plugin.ps1 use,
+    so all four tools agree on where a given plugin actually lives."""
+    if not PLUGIN_MANIFEST_PATH.exists():
+        raise FileNotFoundError(f"plugin-manifest.json not found at: {PLUGIN_MANIFEST_PATH}")
+    with open(PLUGIN_MANIFEST_PATH, "r", encoding="utf-8") as f:
+        manifest = json.load(f)
+    if plugin_slug not in manifest:
+        available = ", ".join(manifest.keys())
+        raise ValueError(f"Unknown plugin slug '{plugin_slug}'. Known slugs: {available}")
+    return PLUGINS_DIR / manifest[plugin_slug]
 
 
 # ─── Site Config Reader ────────────────────────────────────────────────────────
@@ -236,27 +254,46 @@ class PluginDeployer:
 # ─── GitHub Sync ───────────────────────────────────────────────────────────────
 
 class GitHubSyncer:
-    """Commits and pushes current changes to remote GitHub origin."""
+    """
+    Commits and pushes current changes to the containing repo's GitHub origin.
 
-    def __init__(self, repo_dir: Path, commit_message: str) -> None:
-        self._repo_dir = repo_dir
+    cwd is set to the plugin's own source directory (not a hardcoded repo
+    root), so `git add .` only stages that plugin's own changes even though
+    every plugin under plugins/ lives in the same monorepo -- deploying
+    image-webp-converter never accidentally sweeps up unrelated
+    belchamber-auth-bridge changes, or vice versa. git commit/push still
+    operate on the whole repo's shared branch, same as running git from any
+    subdirectory of a repo normally would.
+    """
+
+    def __init__(self, plugin_dir: Path, commit_message: str) -> None:
+        self._plugin_dir = plugin_dir
         self._commit_message = commit_message
 
     def sync(self) -> bool:
         """Stage all, commit if changes exist, and push to origin/main."""
         try:
-            subprocess.run(["git", "add", "."], cwd=self._repo_dir, check=True)
+            remote_url = subprocess.run(
+                ["git", "remote", "get-url", "origin"],
+                cwd=self._plugin_dir, capture_output=True, text=True, check=True
+            ).stdout.strip()
+        except subprocess.CalledProcessError:
+            print("  [ERROR] Git sync failed: no 'origin' remote configured for this repo.")
+            return False
+
+        try:
+            subprocess.run(["git", "add", "."], cwd=self._plugin_dir, check=True)
             result = subprocess.run(
                 ["git", "commit", "-m", self._commit_message],
-                cwd=self._repo_dir, capture_output=True, text=True
+                cwd=self._plugin_dir, capture_output=True, text=True
             )
             if "nothing to commit" in result.stdout or "nothing to commit" in result.stderr:
                 print("  [INFO] No new changes to commit. Pushing existing state...")
             else:
                 print(f"  [OK] Committed: {self._commit_message}")
 
-            subprocess.run(["git", "push", "origin", "main"], cwd=self._repo_dir, check=True)
-            print("  [OK] Pushed to https://github.com/aaronbelchamber/wp-auth-service")
+            subprocess.run(["git", "push", "origin", "main"], cwd=self._plugin_dir, check=True)
+            print(f"  [OK] Pushed to {remote_url}")
             return True
         except subprocess.CalledProcessError as e:
             print(f"  [ERROR] Git sync failed: {e}")
@@ -267,7 +304,11 @@ class GitHubSyncer:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Deploy wp-app-bridge plugin to a WordPress site managed by site-manager."
+        description="Deploy a plugin (from plugin-manifest.json) to a WordPress site managed by site-manager."
+    )
+    parser.add_argument(
+        "--plugin", required=True,
+        help="Plugin slug as defined in plugins/plugin-manifest.json (e.g. belchamber-auth-bridge)"
     )
     parser.add_argument(
         "--site", required=True,
@@ -276,11 +317,20 @@ def main() -> None:
     parser.add_argument("--plugin-dir", default=None, help="Override remote plugin directory path")
     parser.add_argument("--dry-run", action="store_true", help="Simulate deployment without transferring files")
     parser.add_argument("--no-git", action="store_true", help="Skip GitHub cloud backup push")
-    parser.add_argument("--commit-message", default="Deploy wp-app-bridge plugin update", help="Git commit message")
+    parser.add_argument("--commit-message", default=None, help="Git commit message (default: 'Deploy <plugin> update')")
     args = parser.parse_args()
 
+    try:
+        plugin_src = resolve_plugin_src(args.plugin)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"[ERROR] {e}")
+        sys.exit(1)
+
+    commit_message = args.commit_message or f"Deploy {args.plugin} update"
+
     print("\n===========================================================")
-    print(f" WP App Bridge Plugin Deployer")
+    print(f" Plugin Deployer")
+    print(f"    Plugin      : {args.plugin}")
     print(f"    Target Site : {args.site}")
     print(f"    Dry Run     : {'Yes' if args.dry_run else 'No'}")
     print("===========================================================\n")
@@ -288,7 +338,7 @@ def main() -> None:
     # Step 1: GitHub cloud backup
     if not args.no_git:
         print("[Step 1/2] Syncing to GitHub cloud backup...")
-        syncer = GitHubSyncer(repo_dir=Path(__file__).parent, commit_message=args.commit_message)
+        syncer = GitHubSyncer(plugin_dir=plugin_src, commit_message=commit_message)
         syncer.sync()
     else:
         print("[Step 1/2] Skipping GitHub sync (--no-git).")
@@ -315,18 +365,28 @@ def main() -> None:
     ssh_key = creds.get("ssh_private_key")
     ssh_pass = creds.get("ssh_password")
 
-    # Derive remote plugin path from wp_path + plugins dir
+    # Remote plugin path: prefer an explicit --plugin-dir override, then a
+    # per-site plugin_path from sites.yaml, then fall back to naively
+    # deriving it from wp_path. The naive derivation assumes wp-content
+    # lives directly under wp_path, which is wrong for sites where
+    # WordPress core is installed in its own subdirectory (e.g. .../cms/)
+    # with wp-content elsewhere — set plugin_path explicitly in sites.yaml
+    # for any site shaped like that.
     wp_path = site.get("wp_path", "").rstrip("/")
-    remote_plugin_dir = args.plugin_dir or f"{wp_path}/wp-content/plugins/{PLUGIN_NAME}"
+    remote_plugin_dir = (
+        args.plugin_dir
+        or site.get("plugin_path")
+        or f"{wp_path}/wp-content/plugins/{args.plugin}"
+    )
 
     print(f"  Host       : {ssh_user}@{ssh_host}:{ssh_port}")
     print(f"  Plugin Dir : {remote_plugin_dir}")
-    print(f"  Local Src  : {PLUGIN_SRC}\n")
+    print(f"  Local Src  : {plugin_src}\n")
 
     deployer = PluginDeployer(ssh_host, ssh_port, ssh_user, ssh_key, ssh_pass)
     try:
         deployer.connect()
-        deployer.deploy(PLUGIN_SRC, remote_plugin_dir, dry_run=args.dry_run)
+        deployer.deploy(plugin_src, remote_plugin_dir, dry_run=args.dry_run)
         print(f"\n[OK] {'Dry run complete.' if args.dry_run else 'Plugin deployed successfully!'}")
     except Exception as e:
         print(f"\n[ERROR] Deployment failed: {e}")

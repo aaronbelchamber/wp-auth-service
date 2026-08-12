@@ -15,7 +15,7 @@ from wp_auth_lib import (
     health_check,
 )
 
-class TestWPAppBridge(unittest.TestCase):
+class TestWPAuthBridge(unittest.TestCase):
 
     def test_app_session_dataclass(self):
         session = AppSession(
@@ -71,7 +71,7 @@ class TestWPAppBridge(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.read.return_value = json.dumps({
             "name": "My WordPress Site",
-            "namespaces": ["wp/v2", "app/v1"]
+            "namespaces": ["wp/v2", "auth-bridge/v1"]
         }).encode("utf-8")
         mock_urlopen.return_value.__enter__.return_value = mock_response
 

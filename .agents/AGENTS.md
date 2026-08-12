@@ -9,9 +9,6 @@
 # Project Rules & Customizations
 
 ## Plugin Versioning Policy
-- Whenever modifying, updating, or adding features/fixes to the WordPress plugin (`wp-app-bridge`), you MUST incrementally increase the plugin version number (patch, minor, or major as appropriate).
-- Ensure version updates are synchronized across:
-  1. Header constant in `wp-app-bridge.php` (`Version: X.Y.Z`)
-  2. PHP Constant `WP_APP_BRIDGE_VERSION`
-  3. PHP Constant `WP_APP_BRIDGE_DB_VERSION` (when DB changes occur)
-  4. Option updates in activation/update hooks.
+- Whenever modifying, updating, or adding features/fixes to `belchamber-auth-bridge`, you MUST incrementally increase the plugin version number (patch, minor, or major as appropriate).
+- Sync across: header `Version:` in `belchamber-auth-bridge.php`, the `BELCHAMBER_AUTH_BRIDGE_VERSION` constant, `readme.txt`'s `Stable tag:`, and — only when the DB schema actually changed — `BELCHAMBER_AUTH_BRIDGE_DB_VERSION` plus its activation-hook `update_option()` call.
+- Full policy: [CONTRIBUTING.md](../CONTRIBUTING.md).

@@ -88,16 +88,16 @@ A chronological record of what was built across each implementation phase, inclu
 
 ---
 
-## Phase 6: WP App Bridge Plugin & Session Storage ✅
+## Phase 6: Belchamber Auth Bridge Plugin & Session Storage ✅
 
 **Goal:** WordPress plugin for per-user, per-app session/state storage via the WP REST API.
 
-**Current version:** `wp-app-bridge v1.2.0`
+**Current version:** `belchamber-auth-bridge v1.2.0`
 
 **Deliverables:**
-- `wp-app-bridge/wp-app-bridge.php` — single-file WordPress plugin
-- Activation hook provisions `wp_app_sessions` table via `dbDelta()`
-- REST endpoints under `/wp-json/app/v1/`:
+- `belchamber-auth-bridge/belchamber-auth-bridge.php` — single-file WordPress plugin
+- Activation hook provisions `wp_belchamber_auth_sessions` table via `dbDelta()`
+- REST endpoints under `/wp-json/auth-bridge/v1/`:
   - `GET /session` — fetch session by `app_id` + `session_key`
   - `POST /session` — upsert session payload
   - `DELETE /session` — remove session entry
@@ -106,7 +106,7 @@ A chronological record of what was built across each implementation phase, inclu
 - Force-enables Application Passwords regardless of `WP_ENVIRONMENT_TYPE`
 - Admin audit logging with user-level activity tracking
 
-**DB schema (`wp_app_sessions`):**
+**DB schema (`wp_belchamber_auth_sessions`):**
 
 | Column | Type | Description |
 |---|---|---|

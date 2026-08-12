@@ -268,7 +268,7 @@
                                 <span x-show="showPluginGuide" class="text-xs font-bold text-amber-600">⚠ Installation Needed</span>
                             </div>
                             <h3 class="font-bold text-slate-800 text-sm mb-1">1. Plugin Liveness Probe</h3>
-                            <p class="text-xs text-slate-500 mb-3">Checks if <code>wp-app-bridge</code> plugin is active on target site.</p>
+                            <p class="text-xs text-slate-500 mb-3">Checks if <code>belchamber-auth-bridge</code> plugin is active on target site.</p>
                             
                             <div class="flex gap-2 flex-wrap">
                                 <button type="button" @click="runStep1PluginCheck()"
@@ -289,7 +289,7 @@
                                 <ol class="list-decimal list-inside text-amber-900 space-y-1">
                                     <li>Click <strong>Download Plugin Zip</strong> above.</li>
                                     <li>Go to your WordPress site: <code class="font-mono bg-white px-1 py-0.5 rounded border border-amber-200" x-text="(getTargetEndpoint().wp_root_url || 'https://yoursite.com') + '/wp-admin/plugin-install.php'"></code></li>
-                                    <li>Click <strong>Upload Plugin</strong> → Select <code>wp-app-bridge.zip</code> → <strong>Install Now</strong>.</li>
+                                    <li>Click <strong>Upload Plugin</strong> → Select <code>belchamber-auth-bridge.zip</code> → <strong>Install Now</strong>.</li>
                                     <li>Click <strong>Activate Plugin</strong>.</li>
                                     <li>Return here and click <strong>Run Plugin Check</strong>.</li>
                                 </ol>

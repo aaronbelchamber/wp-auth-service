@@ -710,7 +710,7 @@ async def check_plugin_liveness(
     endpoint_id: str,
     ep_storage: EndpointStorage = Depends(get_endpoint_storage)
 ):
-    """Check if the WP App Bridge plugin is active and installed on the endpoint site."""
+    """Check if the Belchamber Auth Bridge plugin is active and installed on the endpoint site."""
     profile = ep_storage.get_profile(endpoint_id)
     if not profile:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Endpoint profile not found")
@@ -719,10 +719,10 @@ async def check_plugin_liveness(
     parent_url = "/".join(wp_url.split("/")[:-1]) if "/cms" in wp_url or wp_url.count("/") > 3 else wp_url
 
     candidate_urls = [
-        f"{wp_url}/?rest_route=/app/v1/health",
-        f"{wp_url}/index.php?rest_route=/app/v1/health",
-        f"{wp_url}/wp-json/app/v1/health",
-        f"{parent_url}/wp-json/app/v1/health" if parent_url != wp_url else "",
+        f"{wp_url}/?rest_route=/auth-bridge/v1/health",
+        f"{wp_url}/index.php?rest_route=/auth-bridge/v1/health",
+        f"{wp_url}/wp-json/auth-bridge/v1/health",
+        f"{parent_url}/wp-json/auth-bridge/v1/health" if parent_url != wp_url else "",
         f"{wp_url}/?rest_route=/",
         f"{wp_url}/wp-json/"
     ]
@@ -740,9 +740,9 @@ async def check_plugin_liveness(
                         try:
                             data = res.json()
                             if isinstance(data, dict):
-                                if data.get("plugin") == "wp-app-bridge":
+                                if data.get("plugin") == "belchamber-auth-bridge":
                                     return {"is_plugin_active": True, "details": data, "active_url": target_url}
-                                if "namespaces" in data and "app/v1" in data.get("namespaces", []):
+                                if "namespaces" in data and "auth-bridge/v1" in data.get("namespaces", []):
                                     return {"is_plugin_active": True, "details": {"namespaces": data["namespaces"], "version": "1.1.0 (via REST index)"}, "active_url": target_url}
                         except Exception:
                             pass
@@ -760,8 +760,8 @@ async def check_plugin_liveness(
 
 @router.get("/plugin/download")
 async def download_plugin_zip():
-    """Dynamically build and return the latest wp-app-bridge.zip file."""
-    plugin_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "wp-app-bridge")
+    """Dynamically build and return the latest belchamber-auth-bridge.zip file."""
+    plugin_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "belchamber-auth-bridge")
     if not os.path.exists(plugin_dir):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plugin directory not found")
 
@@ -777,7 +777,7 @@ async def download_plugin_zip():
     return Response(
         content=zip_buffer.getvalue(),
         media_type="application/zip",
-        headers={"Content-Disposition": "attachment; filename=wp-app-bridge.zip"}
+        headers={"Content-Disposition": "attachment; filename=belchamber-auth-bridge.zip"}
     )
 
 

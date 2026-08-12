@@ -257,13 +257,13 @@ def validate_credentials(
 
 
 def get_session(wp_root_url: str, user_login: str, password: str, app_id: str, session_key: str, timeout: int = 30) -> AppSession:
-    """Fetch session payload from WordPress plugin wp-app-bridge via REST API."""
+    """Fetch session payload from WordPress plugin belchamber-auth-bridge via REST API."""
     wp_root_url = wp_root_url.rstrip("/")
     query_part = f"app_id={urllib.parse.quote(app_id)}&session_key={urllib.parse.quote(session_key)}"
     candidate_urls = [
-        f"{wp_root_url}/?rest_route=/app/v1/session&{query_part}",
-        f"{wp_root_url}/index.php?rest_route=/app/v1/session&{query_part}",
-        f"{wp_root_url}/wp-json/app/v1/session?{query_part}"
+        f"{wp_root_url}/?rest_route=/auth-bridge/v1/session&{query_part}",
+        f"{wp_root_url}/index.php?rest_route=/auth-bridge/v1/session&{query_part}",
+        f"{wp_root_url}/wp-json/auth-bridge/v1/session?{query_part}"
     ]
     
     credentials = f"{user_login}:{password}"
@@ -304,12 +304,12 @@ def get_session(wp_root_url: str, user_login: str, password: str, app_id: str, s
 
 
 def save_session(wp_root_url: str, user_login: str, password: str, app_id: str, session_key: str, payload: Any, timeout: int = 30) -> dict:
-    """Create or update session payload in WordPress plugin wp-app-bridge via REST API."""
+    """Create or update session payload in WordPress plugin belchamber-auth-bridge via REST API."""
     wp_root_url = wp_root_url.rstrip("/")
     candidate_urls = [
-        f"{wp_root_url}/?rest_route=/app/v1/session",
-        f"{wp_root_url}/index.php?rest_route=/app/v1/session",
-        f"{wp_root_url}/wp-json/app/v1/session"
+        f"{wp_root_url}/?rest_route=/auth-bridge/v1/session",
+        f"{wp_root_url}/index.php?rest_route=/auth-bridge/v1/session",
+        f"{wp_root_url}/wp-json/auth-bridge/v1/session"
     ]
     
     credentials = f"{user_login}:{password}"
@@ -348,13 +348,13 @@ def save_session(wp_root_url: str, user_login: str, password: str, app_id: str, 
 
 
 def delete_session(wp_root_url: str, user_login: str, password: str, app_id: str, session_key: str, timeout: int = 30) -> dict:
-    """Delete session entry from WordPress plugin wp-app-bridge via REST API."""
+    """Delete session entry from WordPress plugin belchamber-auth-bridge via REST API."""
     wp_root_url = wp_root_url.rstrip("/")
     query_part = f"app_id={urllib.parse.quote(app_id)}&session_key={urllib.parse.quote(session_key)}"
     candidate_urls = [
-        f"{wp_root_url}/?rest_route=/app/v1/session&{query_part}",
-        f"{wp_root_url}/index.php?rest_route=/app/v1/session&{query_part}",
-        f"{wp_root_url}/wp-json/app/v1/session?{query_part}"
+        f"{wp_root_url}/?rest_route=/auth-bridge/v1/session&{query_part}",
+        f"{wp_root_url}/index.php?rest_route=/auth-bridge/v1/session&{query_part}",
+        f"{wp_root_url}/wp-json/auth-bridge/v1/session?{query_part}"
     ]
     
     credentials = f"{user_login}:{password}"
@@ -396,7 +396,7 @@ def health_check(wp_root_url: str, timeout: int = 10) -> dict:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             namespaces = data.get("namespaces", [])
-            plugin_installed = "app/v1" in namespaces
+            plugin_installed = "auth-bridge/v1" in namespaces
             return {
                 "reachable": True,
                 "wp_name": data.get("name"),

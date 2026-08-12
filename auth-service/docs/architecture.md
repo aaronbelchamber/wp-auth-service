@@ -13,7 +13,7 @@ plugins/
 └── auth-service/
     ├── wp_auth_lib/          ← Core Python library (zero external deps)
     ├── wp_auth_service/      ← FastAPI REST service (wraps wp_auth_lib)
-    ├── wp-app-bridge/        ← WordPress plugin (installs on WP site)
+    ├── belchamber-auth-bridge/        ← WordPress plugin (installs on WP site)
     └── static/               ← Admin web UI (Alpine.js)
 ```
 
@@ -71,20 +71,20 @@ Interactive OpenAPI docs: `http://localhost:8000/docs`
 
 ---
 
-### `wp-app-bridge` — WordPress Plugin
+### `belchamber-auth-bridge` — WordPress Plugin
 
 **Responsibility:** Add a session/state storage layer to any WordPress site without touching WP core or existing content.
 
 **Key principle:** Authentication is 100% handled by WordPress core (Application Passwords). The plugin only handles data — it never reimplements auth.
 
 ```
-wp-app-bridge/
-└── wp-app-bridge.php   ← Single-file plugin (all logic self-contained)
+belchamber-auth-bridge/
+└── belchamber-auth-bridge.php   ← Single-file plugin (all logic self-contained)
 ```
 
 **What the plugin does:**
-1. On activation: provisions `wp_app_sessions` table via `dbDelta()`
-2. Registers REST routes under namespace `app/v1`
+1. On activation: provisions `wp_belchamber_auth_sessions` table via `dbDelta()`
+2. Registers REST routes under namespace `auth-bridge/v1`
 3. Sets `permission_callback => 'is_user_logged_in'` on all routes (WP core validates the Application Password in the `Authorization: Basic` header automatically)
 4. Detects reverse proxy / Cloudflare HTTPS so Application Passwords work behind load balancers
 5. Force-enables Application Passwords (`wp_is_application_passwords_available` filter) regardless of environment type — safe for local HTTP development
@@ -128,7 +128,7 @@ wp-app-bridge/
          returns: { user_id, username, email, roles, capabilities }
          ↓
 9. App stores credentials and uses them for subsequent calls:
-         GET/POST/DELETE {wp_root_url}/wp-json/app/v1/session
+         GET/POST/DELETE {wp_root_url}/wp-json/auth-bridge/v1/session
          Authorization: Basic base64(user_login:password)
 ```
 
@@ -142,7 +142,7 @@ All errors surface as typed exceptions from `wp_auth_lib/exceptions.py`:
 |---|---|
 | `WPConnectionError` | DNS failure, network timeout, connection refused |
 | `WPAuthError` | Invalid credentials, revoked Application Password, HTTPS required |
-| `WPApiError` | WP REST API unavailable, `wp-app-bridge` plugin not installed |
+| `WPApiError` | WP REST API unavailable, `belchamber-auth-bridge` plugin not installed |
 | `WPDataError` | DB query failure, malformed JSON payload |
 
 The REST service translates these to appropriate HTTP status codes with descriptive JSON error bodies.

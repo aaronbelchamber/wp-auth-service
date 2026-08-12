@@ -1054,7 +1054,7 @@ function authApp() {
                 });
                 const saveResult = await saveRes.json();
                 if (!saveResult.success) throw new Error(saveResult.detail || 'Save failed');
-                this.addLog(`✓ Saved test payload into WordPress app_sessions table.`, 'success');
+                this.addLog(`✓ Saved test payload into WordPress belchamber_auth_sessions table.`, 'success');
 
                 this.addLog(`Reading back session payload from WordPress...`);
                 const getRes = await fetch('/api/v1/session/get', {

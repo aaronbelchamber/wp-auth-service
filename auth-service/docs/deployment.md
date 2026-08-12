@@ -1,12 +1,12 @@
 # Deployment & Operations Guide
 
-This guide covers deploying `wp-app-bridge` plugin updates directly to remote WordPress sites using `deploy_plugin.py` and running `wp_auth_service` in cloud environments using Docker.
+This guide covers deploying `belchamber-auth-bridge` plugin updates directly to remote WordPress sites using `deploy_plugin.py` and running `wp_auth_service` in cloud environments using Docker.
 
 ---
 
 ## ⚡ One-Liner Remote Plugin Deployment (`deploy_plugin.py`)
 
-Deploy updates to the `wp-app-bridge` WordPress plugin with a single command to any connected WordPress site (such as `tools.belchamber.us`). The deployer integrates seamlessly with `site-manager` config (`sites.yaml` & encrypted credentials):
+Deploy updates to the `belchamber-auth-bridge` WordPress plugin with a single command to any connected WordPress site (such as `tools.belchamber.us`). The deployer integrates seamlessly with `site-manager` config (`sites.yaml` & encrypted credentials):
 
 ```bash
 # 1. Deploy live update to tools.belchamber.us (auto-commits to GitHub & uploads via SFTP)
@@ -19,7 +19,7 @@ python deploy_plugin.py --site tools-belchamber-us --dry-run
 ### What `deploy_plugin.py` Does Automatically:
 1. **GitHub Cloud Backup**: Stages, commits, and pushes plugin updates to `https://github.com/aaronbelchamber/wp-auth-service`.
 2. **Site-Manager Integration**: Reads target site SSH details and decrypts credentials directly from `site-manager` (`sites.yaml` & `~/.wp_site_manager/credentials.enc`).
-3. **SFTP Direct Upload**: Uploads plugin files via Paramiko SFTP straight to `/wp-content/plugins/wp-app-bridge` on the target server.
+3. **SFTP Direct Upload**: Uploads plugin files via Paramiko SFTP straight to `/wp-content/plugins/belchamber-auth-bridge` on the target server.
 
 ---
 
