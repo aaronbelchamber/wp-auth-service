@@ -1,16 +1,12 @@
 # auth_kit
 
 Drop-in, pluggable authentication SDK for Flutter apps built against the
-`wordpress-site-manager-private` auth-service backends. Ships a self-guided
+`wp-auth-service` backends. Ships a self-guided
 in-app login wizard and a swappable `AuthProvider` interface so app code
 never hardcodes which auth backend is active.
 
 This is the Flutter "flavor" of the auth-service client SDK — see
 `sdks/` for future PHP/Node/Angular siblings.
-
-> **Private repo, for now.** This package currently lives only in the
-> private `wordpress-site-manager-private` repo. Porting it to the public
-> auth-service repo is planned as a separate, later step.
 
 ## Integration steps (copy this into any new consuming app)
 
@@ -21,7 +17,7 @@ This is the Flutter "flavor" of the auth-service client SDK — see
    dependencies:
      auth_kit:
        git:
-         url: https://github.com/aaronbelchamber/wordpress-site-manager-private.git
+         url: https://github.com/aaronbelchamber/wp-auth-service.git
          path: auth-service/sdks/flutter/auth_kit
          ref: auth-kit-v0.1.0
    ```
