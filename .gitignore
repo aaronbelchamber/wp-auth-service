@@ -14,3 +14,6 @@ auth-service/wp_auth_service/api/__pycache__/*
 credentials.json
 sites.yaml
 discovered_sites.json
+
+# A worktree's .git is a file, so `git add -A` stages this as a gitlink.
+.claude/worktrees/
