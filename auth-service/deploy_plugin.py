@@ -19,6 +19,7 @@ Usage:
 import argparse
 import io
 import json
+import struct
 import os
 import sys
 import socket
@@ -34,9 +35,41 @@ from typing import Optional
 
 PLUGINS_DIR = Path(__file__).resolve().parent.parent
 PLUGIN_MANIFEST_PATH = PLUGINS_DIR / "plugin-manifest.json"
-SITE_MANAGER_DIR = Path(__file__).resolve().parent.parent.parent / "site-manager"
+SITE_MANAGER_DIR = Path(__file__).resolve().parent.parent.parent / "site-ops"
 SITES_YAML = SITE_MANAGER_DIR / "config" / "sites.yaml"
 CREDENTIALS_ENC = Path.home() / ".wp_site_manager" / "credentials.enc"
+
+
+# --- Credential file format ---------------------------------------------------
+# site-manager writes credentials.enc in one of two layouts, and these scripts
+# read it directly rather than importing site-manager's package -- so they have
+# to know both.
+#
+#   v2 (current):  b"WPSMv2:" + iterations (4-byte big-endian) + 16-byte salt
+#                  + Fernet ciphertext
+#   v1 (legacy) :  16-byte salt + Fernet ciphertext, always 100_000 iterations
+#
+# The v2 header exists so the iteration count can be raised without breaking
+# files already on disk -- and it was raised, from 100k to 600k. These scripts
+# were written against v1 only, so once site-manager re-encrypted the store they
+# failed with a bare InvalidToken, which reads exactly like a wrong passphrase.
+# It is worth being precise about that: nothing was wrong with the key.
+#
+# The comment at the top of this file claims these scripts cannot be broken by
+# refactors in site-manager because they do not import it. That was true of the
+# config PATHS and false of the file FORMAT.
+_CRED_MAGIC = b"WPSMv2:"
+_CRED_LEGACY_ITERATIONS = 100_000
+
+
+def _parse_credentials_blob(data):
+    """Return (salt, ciphertext, iterations) for either layout."""
+    if data.startswith(_CRED_MAGIC):
+        offset = len(_CRED_MAGIC)
+        iterations = struct.unpack(">I", data[offset:offset + 4])[0]
+        offset += 4
+        return data[offset:offset + 16], data[offset + 16:], iterations
+    return data[:16], data[16:], _CRED_LEGACY_ITERATIONS
 
 
 def resolve_plugin_src(plugin_slug: str) -> Path:
@@ -122,14 +155,13 @@ class SiteConfigReader:
 
                     with open(self._credentials_enc, "rb") as f:
                         data = f.read()
-                    salt = data[:16]
-                    ciphertext = data[16:]
+                    salt, ciphertext, _iterations = _parse_credentials_blob(data)
 
                     kdf = PBKDF2HMAC(
                         algorithm=hashes.SHA256(),
                         length=32,
                         salt=salt,
-                        iterations=100000,
+                        iterations=_iterations,
                     )
                     key = base64.urlsafe_b64encode(kdf.derive(enc_key.encode("utf-8")))
                     fernet = Fernet(key)
