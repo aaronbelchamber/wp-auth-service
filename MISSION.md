@@ -29,6 +29,30 @@ support commitment, and not a multi-tenant SaaS.
 - Not a mobile-only or Flutter-only project -- the core service and plugin are backend-agnostic; `auth_kit` is one client among planned future SDKs (PHP/Node/Angular are named as siblings, not yet built).
 - Not the place to store real per-app user data beyond session/auth state -- the plugin's storage is deliberately minimal (session table + a flat global key/value store), not a general data backend.
 
+## Interfaces
+
+```yaml
+provides:
+  - name: auth-bridge-rest-api
+    surface: "/wp-json/auth-bridge/v1/* -- belchamber-auth-bridge plugin, session storage, rate limiting, app whitelisting; any HTTP client with a WP Application Password can call it directly"
+    kind: http
+    stable: true
+    consumers: [where-am-i-app]
+    note: "Consumed under this plugin's former name, wp-app-bridge, in where-am-i-app's own docs."
+  - name: auth-kit-flutter-sdk
+    surface: "auth-service/sdks/flutter/auth_kit -- WordPressAppPasswordProvider + JwtAuthProvider, swappable AuthProvider interface"
+    kind: package
+    stable: true
+    consumers: [fun-activities-app-flutter]
+  - name: wp-auth-service-api
+    surface: "http://localhost:8000 -- FastAPI wrapper (/api/v1/auth/url, /callback, /validate), admin UI + interactive docs at /docs"
+    kind: http
+    stable: true
+    consumers: []
+    note: "Not in the portfolio's 62000-62099/63000-63099 port band -- deliberately outside it, not portfolio-supervised."
+consumes: []
+```
+
 ## Related projects -- and, if applicable, how they work together
 
 This repository is the **published** copy. Development happens in a private
