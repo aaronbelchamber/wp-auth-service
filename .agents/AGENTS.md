@@ -2,8 +2,9 @@
 > in this file and both outrank it:
 >
 > - The repo's canonical rulebook is [`../AGENTS.md`](../AGENTS.md) -- the
->   architecture map, the commands, the traps. Every other agent tool reads
->   that one. Read it.
+>   architecture map, the commands, the traps. Antigravity loads that one too:
+>   it globs `**/AGENTS.md`, which is also why this file is not inert. Read it,
+>   and where the two disagree the root file wins.
 > - Standing preferences for the whole drive are four files in
 >   `E:\project-hub\`: `PREFERENCES.md`, `PRACTICES.md`, `COLLABORATION.md`
 >   and `DOCUMENTATION.md`. All four are canonical -- where any of them and
