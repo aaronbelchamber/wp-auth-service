@@ -155,7 +155,7 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health():
         return {
-            "status": "healthy",
+            "status": "ok",
             "service": "WordPress Auth Service",
             "version": "1.0.0",
             "cache_type": "redis" if settings.redis_url else "in-memory",

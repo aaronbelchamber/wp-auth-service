@@ -500,7 +500,7 @@ async def health_check_service(wp_root_url: Optional[str] = None):
     Returns service health and optional WordPress site reachability diagnostic.
     """
     res = {
-        "status": "healthy",
+        "status": "ok",
         "service": "WordPress Auth Service",
         "version": SERVICE_VERSION
     }
