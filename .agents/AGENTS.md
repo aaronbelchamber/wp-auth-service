@@ -1,3 +1,18 @@
+> **This is Antigravity's workspace customisations root.** Two things are not
+> in this file and both outrank it:
+>
+> - The repo's canonical rulebook is [`../AGENTS.md`](../AGENTS.md) -- the
+>   architecture map, the commands, the traps. Every other agent tool reads
+>   that one. Read it.
+> - Standing preferences for the whole drive are four files in
+>   `E:\project-hub\`: `PREFERENCES.md`, `PRACTICES.md`, `COLLABORATION.md`
+>   and `DOCUMENTATION.md`. All four are canonical -- where any of them and
+>   anything below disagree, they win and the text below is what to fix.
+>   `gh repo clone aaronbelchamber/project-hub` if that path does not resolve.
+>
+> What belongs here is only what is genuinely Antigravity-specific, or an
+> invariant important enough to be worth stating twice.
+
 # Agent Tool Configuration — Antigravity IDE
 
 > [!NOTE]

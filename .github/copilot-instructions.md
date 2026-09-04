@@ -8,5 +8,6 @@ Three copies of the same instructions is how they drift apart, and how three
 agents end up working the same repo to three different rulebooks -- so the
 content lives in one place and the other names point at it.
 
-Standing preferences for the whole drive are in
-the operator's cross-project preferences file, linked from AGENTS.md.
+Standing preferences for the whole drive are in the operator's four
+cross-project files, kept outside this repository and linked from AGENTS.md.
+All four apply.

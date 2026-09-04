@@ -1,13 +1,16 @@
 > **Standing preferences apply to this repo.** The operator of this project
-> keeps one cross-project preferences file — ports, launching processes without
-> a window, URL hygiene, branch conventions, script placement, file-size
-> thresholds, verification, design systems, self-review — outside this
-> repository, and it is canonical where it and anything below disagree.
+> keeps them outside this repository, in four cross-project files —
+> `PREFERENCES.md` (ports, launching processes without a window, URL hygiene,
+> hosting), `PRACTICES.md` (script placement, file size, verification, design
+> systems, self-review, CI), `COLLABORATION.md` (version control and branch
+> conventions, worktrees rather than `main`) and `DOCUMENTATION.md` (writing a
+> doc in the tense of what exists, session retros). All four are canonical
+> where they and anything below disagree.
 >
-> It is not published here, and it is not something an outside contributor
-> needs: everything required to build, test and run this project is in this
-> repo. If you are working with the drive mounted, read it before changing
-> anything.
+> They are not published here, and they are not something an outside
+> contributor needs: everything required to build, test and run this project is
+> in this repo. If you are working with the drive mounted they are in
+> `E:\project-hub\` — read all four before changing anything.
 
 # AGENTS.md
 
