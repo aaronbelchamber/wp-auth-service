@@ -1,16 +1,19 @@
 > **Standing preferences apply to this repo.** The operator of this project
-> keeps them outside this repository, in four cross-project files —
+> keeps them outside this repository, in a set of cross-project files —
 > `PREFERENCES.md` (ports, launching processes without a window, URL hygiene,
-> hosting), `PRACTICES.md` (script placement, file size, verification, design
-> systems, self-review, CI), `COLLABORATION.md` (version control and branch
-> conventions, worktrees rather than `main`) and `DOCUMENTATION.md` (writing a
-> doc in the tense of what exists, session retros). All four are canonical
-> where they and anything below disagree.
+> hosting), `PRACTICES.md` (script placement, file size, design systems, who
+> owns what across projects), `VERIFICATION.md` (how a claim that work is
+> finished gets established, self-review, CI), `COLLABORATION.md` (version
+> control and branch conventions, worktrees rather than `main`) and
+> `DOCUMENTATION.md` (writing a doc in the tense of what exists, session
+> retros). All of them are canonical where they and anything below disagree.
 >
 > They are not published here, and they are not something an outside
 > contributor needs: everything required to build, test and run this project is
 > in this repo. If you are working with the drive mounted they are in
-> `E:\project-hub\` — read all four before changing anything.
+> `E:\project-hub\` — list `*.md` there and read what is present before
+> changing anything, rather than working from the list above: the set grows
+> each time one of those files outgrows its own size rule.
 
 # AGENTS.md
 
