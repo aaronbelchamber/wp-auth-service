@@ -6,10 +6,9 @@
 >   it globs `**/AGENTS.md`, which is also why this file is not inert. Read it,
 >   and where the two disagree the root file wins.
 > - Standing preferences for the whole drive are the files in
->   `E:\project-hub\` -- list `*.md` there and read what is present, which today
->   is `PREFERENCES.md`, `PRACTICES.md`, `VERIFICATION.md`, `COLLABORATION.md`
->   and `DOCUMENTATION.md`. All are canonical -- where any of them and
->   anything below disagree, they win and the text below is what to fix.
+>   `E:\project-hub\docs\standards\` -- list `*.md` there and read what is
+>   present rather than trusting a list here. All are canonical -- where any of
+>   them and anything below disagree, they win and the text below is what to fix.
 >   `gh repo clone aaronbelchamber/project-hub` if that path does not resolve.
 >
 > What belongs here is only what is genuinely Antigravity-specific, or an

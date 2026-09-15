@@ -1,23 +1,19 @@
 > **Standing preferences apply to this repo.** The operator of this project
-> keeps them outside this repository, in a set of cross-project files —
-> `PREFERENCES.md` (ports, launching processes without a window, URL hygiene,
-> hosting), `PRACTICES.md` (script placement, file size, design systems, who
-> owns what across projects), `VERIFICATION.md` (how a claim that work is
-> finished gets established, self-review, CI), `COLLABORATION.md` (version
-> control and branch conventions, worktrees rather than `main`) and
-> `DOCUMENTATION.md` (writing a doc in the tense of what exists, session
-> retros). All of them are canonical where they and anything below disagree.
->
-> They are not published here, and they are not something an outside
-> contributor needs: everything required to build, test and run this project is
-> in this repo. If you are working with the drive mounted they are in
-> `E:\project-hub\` — list `*.md` there and read what is present before
-> changing anything, rather than working from the list above: the set grows
-> each time one of those files outgrows its own size rule.
+> keeps them outside this repository, in a set of cross-project files that are
+> canonical wherever they and anything below disagree. They are not published
+> here, and an outside contributor does not need them. With the drive mounted
+> they are in `E:\project-hub\docs\standards\` — list `*.md` there and read what
+> is present rather than trusting a list written here.
 
 # AGENTS.md
 
 Read MISSION.md for what this project is.
+
+**Status as of 2026-09-14: stale, not the auth owner.** No site on the drive
+runs WordPress any more, so the WordPress-backed auth path this repo provides
+has nothing to run against. The drive's auth server is `auth-service-v1`. The
+`auth_kit` SDK copy here is 0.1.0; the one apps actually depend on is 0.3.0 in
+`belchamber-plugins-private`. Do not develop `auth_kit` here.
 
 Three real components live under `auth-service/`: `wp_auth_lib` (zero-dependency Python
 core), `wp_auth_service` (FastAPI wrapper), and `belchamber-auth-bridge` (the WordPress
