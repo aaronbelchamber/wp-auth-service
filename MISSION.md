@@ -42,8 +42,14 @@ provides:
   - name: auth-kit-flutter-sdk
     surface: "auth-service/sdks/flutter/auth_kit -- WordPressAppPasswordProvider + JwtAuthProvider, swappable AuthProvider interface"
     kind: package
-    stable: true
-    consumers: [fun-activities-app-flutter]
+    stable: false
+    consumers: []
+    note: >-
+      Stale as of 2026-09-14 (see AGENTS.md): this copy is 0.1.0 and not
+      developed further. fun-activities-app-flutter, this interface's only
+      would-be consumer, depends on the maintained 0.3.0 copy published from
+      belchamber-plugins-private instead -- see that consumer's own MISSION.md
+      `consumes` block, which names belchamber-plugins-private, not this repo.
   - name: wp-auth-service-api
     surface: "http://localhost:8000 -- FastAPI wrapper (/api/v1/auth/url, /callback, /validate), admin UI + interactive docs at /docs"
     kind: http
@@ -60,8 +66,11 @@ upstream repo and is synced out here, so changes to the auth stack should be
 made upstream rather than independently here -- an edit made only in this repo
 risks being overwritten by the next sync.
 
-Its consumers today are a Flutter app using `auth_kit` as a direct dependency,
-and a second app using the plugin's REST endpoints for account login and sync
-(where it appears under the plugin's former name, `wp-app-bridge`). Both are
-private, so what is worth taking from that is only this: the two client paths
-described above are both exercised in practice, not merely designed.
+Its remaining live consumer is an app using the plugin's REST endpoints for
+account login and sync (where it appears under the plugin's former name,
+`wp-app-bridge`); that one is private, so what is worth taking from it is only
+that the client path is exercised in practice, not merely designed. The
+`auth_kit` SDK bundled in this repo is a separate story: it is the stale 0.1.0
+copy (see AGENTS.md), not what any app currently depends on -- the maintained
+0.3.0 copy ships from `belchamber-plugins-private` instead, and that is what
+fun-activities-app-flutter actually consumes.
