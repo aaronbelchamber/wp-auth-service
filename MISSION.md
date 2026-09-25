@@ -37,8 +37,8 @@ provides:
     surface: "/wp-json/auth-bridge/v1/* -- belchamber-auth-bridge plugin, session storage, rate limiting, app whitelisting; any HTTP client with a WP Application Password can call it directly"
     kind: http
     stable: true
-    consumers: [where-am-i-app]
-    note: "Consumed under this plugin's former name, wp-app-bridge, in where-am-i-app's own docs."
+    consumers: []
+    note: "No consumer: where-am-i-app replaced wp-app-bridge with auth-service-v1 on 09/23/2026, and none of Aaron's sites runs WordPress, so nothing serves this route today."
   - name: auth-kit-flutter-sdk
     surface: "auth-service/sdks/flutter/auth_kit -- WordPressAppPasswordProvider + JwtAuthProvider, swappable AuthProvider interface"
     kind: package
