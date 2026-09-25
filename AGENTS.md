@@ -9,7 +9,7 @@
 
 Read MISSION.md for what this project is.
 
-**Status as of 2026-09-14: stale, not the auth owner.** No site on the drive
+**Status: dormant, and not the auth owner.** No site on the drive
 runs WordPress any more, so the WordPress-backed auth path this repo provides
 has nothing to run against. The drive's auth server is `auth-service-v1`. The
 `auth_kit` SDK copy here is 0.1.0; the one apps actually depend on is 0.3.0 in
