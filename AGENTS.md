@@ -1,9 +1,8 @@
-> **Standing preferences apply to this repo.** The operator of this project
-> keeps them outside this repository, in a set of cross-project files that are
-> canonical wherever they and anything below disagree. They are not published
-> here, and an outside contributor does not need them. With the drive mounted
-> they are in `E:\project-hub\docs\standards\` — list `*.md` there and read what
-> is present rather than trusting a list written here.
+> **Standing preferences apply to this repo.** The operator keeps them in
+> cross-project files outside this repository, canonical wherever they and
+> anything below disagree. They are not published, and an outside contributor
+> does not need them: everything required to build, test and run this project is
+> here.
 
 # AGENTS.md
 
