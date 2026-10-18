@@ -32,6 +32,7 @@ support commitment, and not a multi-tenant SaaS.
 ## Interfaces
 
 ```yaml
+project_kind: app
 provides:
   - name: auth-bridge-rest-api
     surface: "/wp-json/auth-bridge/v1/* -- belchamber-auth-bridge plugin, session storage, rate limiting, app whitelisting; any HTTP client with a WP Application Password can call it directly"
