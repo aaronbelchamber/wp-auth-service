@@ -61,4 +61,3 @@ python -m wp_auth_service.main
 | [`docs/implementation-log.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/implementation-log.md) | Phased build & implementation history |
 | [`docs/admin-auth-guide.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/admin-auth-guide.md) | Site-admin setup: whitelisting, the app-owner connection, `/global` data, rate limits — agent-actionable |
 | [`docs/user-auth-guide.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/user-auth-guide.md) | What end users of an app built on this see, and what to do if something goes wrong |
-| [`sdks/flutter/auth_kit/README.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/sdks/flutter/auth_kit/README.md) | The Flutter client SDK — integration steps for a new consuming app |

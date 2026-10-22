@@ -8,17 +8,16 @@
 
 Read MISSION.md for what this project is.
 
-**Status: dormant, and not the auth owner.** No site on the drive
+**Status: retired, and not the auth owner.** No site on the drive
 runs WordPress any more, so the WordPress-backed auth path this repo provides
 has nothing to run against. The drive's auth server is `auth-service-v1`. The
-`auth_kit` SDK copy here is 0.1.0; the apps depend on the copy published from
-`belchamber-plugins-private` (tag `auth-kit-v0.2.0`; 0.3.0 on its main). Do not
-develop `auth_kit` here.
+`auth_kit` Flutter SDK is not in this repository: it lives in `auth-service-v1` at
+`sdks/flutter/auth_kit`, and the old copy here is removed. Do not develop it here, and do
+not restore it.
 
 Three real components live under `auth-service/`: `wp_auth_lib` (zero-dependency Python
 core), `wp_auth_service` (FastAPI wrapper), and `belchamber-auth-bridge` (the WordPress
-plugin) — plus the Flutter client SDK at `auth-service/sdks/flutter/auth_kit`. Handle
-them as separate concerns despite sharing a repo.
+plugin). Handle them as separate concerns despite sharing a repo.
 
 **Dev source of truth is elsewhere.** `auth-service/` here is a public copy of a
 private upstream repo, synced by hand (own git history, no automated sync;
@@ -43,10 +42,6 @@ check only. Every plugin change MUST bump the version, synced by hand across: he
 `update_option()` call. Policy detail: `CONTRIBUTING.md`. The `bump-version.ps1` helper
 referenced in `auth-service/AGENTS.md` is private-repo tooling, not present here — sync
 by hand.
-
-**auth_kit**: `auth-service/sdks/flutter/auth_kit`, Dart `^3.12.0` / Flutter `>=3.24.0`.
-`flutter test` and `flutter analyze` (has `flutter_lints`) from that directory; not wired
-into CI.
 
 **Deeper reference**: `docs/project-overview.md` and `auth-service/docs/` (architecture,
 deployment, implementation log, auth guides). `.agents/AGENTS.md` (root) and
