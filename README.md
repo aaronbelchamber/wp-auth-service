@@ -1,5 +1,13 @@
 # WordPress Auth Service
 
+> **This repository is retired.** No site on the drive runs WordPress any more, so the
+> WordPress-backed sign-in it provides has nothing to run against, and nothing depends on
+> it. The drive's auth server is
+> [auth-service-v1](https://github.com/aaronbelchamber/auth-service-v1), and the Flutter
+> `auth_kit` SDK that used to be copied here now lives there, at
+> [`sdks/flutter/auth_kit`](https://github.com/aaronbelchamber/auth-service-v1/tree/main/sdks/flutter/auth_kit).
+> The code below is kept for reference and is not maintained.
+
 > Built by [Aaron Belchamber](https://belchamber.us) — Business Growth & Cloud Systems Architect
 > A standalone plug-and-play authentication service — no runtime dependency on any other project. This repository is a public copy of a private upstream repository, kept in step by hand.
 > More: [Brandager.com](https://brandager.com) · [Belchamber.us](https://belchamber.us) · [Tools.Belchamber.us](https://tools.belchamber.us)
