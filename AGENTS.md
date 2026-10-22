@@ -11,18 +11,19 @@ Read MISSION.md for what this project is.
 **Status: dormant, and not the auth owner.** No site on the drive
 runs WordPress any more, so the WordPress-backed auth path this repo provides
 has nothing to run against. The drive's auth server is `auth-service-v1`. The
-`auth_kit` SDK copy here is 0.1.0; the one apps actually depend on is 0.3.0 in
-`belchamber-plugins-private`. Do not develop `auth_kit` here.
+`auth_kit` SDK copy here is 0.1.0; the apps depend on the copy published from
+`belchamber-plugins-private` (tag `auth-kit-v0.2.0`; 0.3.0 on its main). Do not
+develop `auth_kit` here.
 
 Three real components live under `auth-service/`: `wp_auth_lib` (zero-dependency Python
 core), `wp_auth_service` (FastAPI wrapper), and `belchamber-auth-bridge` (the WordPress
 plugin) — plus the Flutter client SDK at `auth-service/sdks/flutter/auth_kit`. Handle
 them as separate concerns despite sharing a repo.
 
-**Dev source of truth is elsewhere.** MISSION.md's "Related projects" section states
-`auth-service/` here is a published copy of a private upstream repo.
-Changes belong in the private repo first, not independently here — this repo just
-receives the sync.
+**Dev source of truth is elsewhere.** `auth-service/` here is a public copy of a
+private upstream repo, synced by hand (own git history, no automated sync;
+`auth-service/check_sync.py` compares two files). Changes belong in the private repo
+first, not independently here -- this repo just receives the hand-sync.
 
 **Run the service**: `cd auth-service`, then `.\setup.ps1` / `./setup.sh` (installs deps,
 writes config, starts on `http://localhost:8000`, admin UI + `/docs`). Manual: `pip

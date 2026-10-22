@@ -1,7 +1,7 @@
 # WordPress Auth Service
 
 > Built by [Aaron Belchamber](https://belchamber.us) — Business Growth & Cloud Systems Architect
-> A standalone plug-and-play authentication service — no dependency on any other project.
+> A standalone plug-and-play authentication service — no runtime dependency on any other project. This repository is a public copy of a private upstream repository, kept in step by hand.
 > More: [Brandager.com](https://brandager.com) · [Belchamber.us](https://belchamber.us) · [Tools.Belchamber.us](https://tools.belchamber.us)
 
 A standalone Python auth service that lets any custom application authenticate its users through a WordPress site using the native [Application Passwords](https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/) flow (built into WordPress 5.6+), plus `belchamber-auth-bridge` — the one WordPress plugin it pairs with, which adds the session-storage layer WordPress core doesn't provide.
