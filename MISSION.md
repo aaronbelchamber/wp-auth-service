@@ -39,7 +39,7 @@ provides:
     kind: http
     stable: true
     consumers: []
-    note: "No consumer: where-am-i-app replaced wp-app-bridge with auth-service-v1 on 09/23/2026, and none of Aaron's sites runs WordPress, so nothing serves this route today."
+    note: "No consumer: where-am-i-app signs in through auth-service-v1 (since 09/23/2026) and fun-activities-app-flutter keeps its WordPress backend dormant with no server behind it; neither calls these endpoints. None of Aaron's sites runs WordPress, so nothing serves this route today."
   - name: auth-kit-flutter-sdk
     surface: "auth-service/sdks/flutter/auth_kit -- WordPressAppPasswordProvider + JwtAuthProvider, swappable AuthProvider interface"
     kind: package
@@ -47,10 +47,11 @@ provides:
     consumers: []
     note: >-
       Stale as of 2026-09-14 (see AGENTS.md): this copy is 0.1.0 and not
-      developed further. fun-activities-app-flutter, this interface's only
-      would-be consumer, depends on the maintained 0.3.0 copy published from
-      belchamber-plugins-private instead -- see that consumer's own MISSION.md
-      `consumes` block, which names belchamber-plugins-private, not this repo.
+      developed further. fun-activities-app-flutter and where-am-i-app depend
+      on the copy published from belchamber-plugins-private instead (tag
+      auth-kit-v0.2.0; 0.3.0 on that repository's main) -- see their own
+      MISSION.md `consumes` blocks, which name belchamber-plugins-private, not
+      this repo.
   - name: wp-auth-service-api
     surface: "http://localhost:8000 -- FastAPI wrapper (/api/v1/auth/url, /callback, /validate), admin UI + interactive docs at /docs"
     kind: http
@@ -62,16 +63,17 @@ consumes: []
 
 ## Related projects -- and, if applicable, how they work together
 
-This repository is the **published** copy. Development happens in a private
-upstream repo and is synced out here, so changes to the auth stack should be
-made upstream rather than independently here -- an edit made only in this repo
-risks being overwritten by the next sync.
+This repository is a public copy of `auth-service/` in the private repository
+`belchamber-plugins-private`, kept in step by hand. It has its own git history
+and no automated sync: `auth-service/check_sync.py`, run by hand, compares
+`deploy_plugin.py` and `_credentials.py` with the private copy. The two differ:
+`belchamber-auth-bridge` is 1.3.0 here and 1.4.0 there. Changes to the auth
+stack are made in the private repository first; an edit made only here can be
+overwritten when the next hand-sync copies files over. It has no runtime
+dependency on any other project.
 
-Its remaining live consumer is an app using the plugin's REST endpoints for
-account login and sync (where it appears under the plugin's former name,
-`wp-app-bridge`); that one is private, so what is worth taking from it is only
-that the client path is exercised in practice, not merely designed. The
-`auth_kit` SDK bundled in this repo is a separate story: it is the stale 0.1.0
-copy (see AGENTS.md), not what any app currently depends on -- the maintained
-0.3.0 copy ships from `belchamber-plugins-private` instead, and that is what
-fun-activities-app-flutter actually consumes.
+Neither fun-activities-app-flutter nor where-am-i-app calls the plugin's REST
+endpoints (see the `auth-bridge-rest-api` note above). The `auth_kit` SDK
+bundled in this repo is the stale 0.1.0 copy (see AGENTS.md), not what any app
+currently depends on: the apps use the copy published from
+`belchamber-plugins-private` (tag `auth-kit-v0.2.0`; 0.3.0 on its main).
