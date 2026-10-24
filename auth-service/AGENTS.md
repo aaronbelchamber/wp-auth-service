@@ -54,10 +54,10 @@ python -m wp_auth_service.main
 
 | File | Description |
 |---|---|
-| [`README.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/README.md) | High-level project entrypoint & quickstart |
-| [`docs/README.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/README.md) | Central Documentation Hub & Table of Contents |
-| [`docs/architecture.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/architecture.md) | Detailed architecture, component map & data flow |
-| [`docs/deployment.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/deployment.md) | Plugin deployment one-liner & Docker cloud guide |
-| [`docs/implementation-log.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/implementation-log.md) | Phased build & implementation history |
-| [`docs/admin-auth-guide.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/admin-auth-guide.md) | Site-admin setup: whitelisting, the app-owner connection, `/global` data, rate limits — agent-actionable |
-| [`docs/user-auth-guide.md`](file:///e:/ab-code-projects/projects/Wordpress/plugins/auth-service/docs/user-auth-guide.md) | What end users of an app built on this see, and what to do if something goes wrong |
+| [`README.md`](README.md) | High-level project entrypoint & quickstart |
+| [`docs/README.md`](docs/README.md) | Central Documentation Hub & Table of Contents |
+| [`docs/architecture.md`](docs/architecture.md) | Detailed architecture, component map & data flow |
+| [`docs/deployment.md`](docs/deployment.md) | Plugin deployment one-liner & Docker cloud guide |
+| [`docs/implementation-log.md`](docs/implementation-log.md) | Phased build & implementation history |
+| [`docs/admin-auth-guide.md`](docs/admin-auth-guide.md) | Site-admin setup: whitelisting, the app-owner connection, `/global` data, rate limits — agent-actionable |
+| [`docs/user-auth-guide.md`](docs/user-auth-guide.md) | What end users of an app built on this see, and what to do if something goes wrong |
