@@ -34,9 +34,10 @@ endpoint storage, service integration, storage lifecycle). No `.github/workflows
 so nothing runs these in CI — run them yourself before marking work done. No Python
 lint/format config found either (no ruff/black/flake8).
 
-**belchamber-auth-bridge**: single PHP file, no build step. Deploy with `python
-deploy_plugin.py --site tools-belchamber-us` (commits + SFTP upload), `--dry-run` to
-check only. Every plugin change MUST bump the version, synced by hand across: header
+**belchamber-auth-bridge**: single PHP file, no build step. The deploy, `python
+deploy_plugin.py --site tools-belchamber-us` (commits + SFTP upload, `--dry-run` to
+check only), is dormant: `tools.belchamber.us` runs no WordPress, and the deployer reads
+Site Ops' `sites.yaml`, which no longer exists, so it needs rework before use. Every plugin change MUST bump the version, synced by hand across: header
 `Version:`, `BELCHAMBER_AUTH_BRIDGE_VERSION` constant, `readme.txt`'s `Stable tag:`, and
 — schema changes only — `BELCHAMBER_AUTH_BRIDGE_DB_VERSION` plus its activation-hook
 `update_option()` call. Policy detail: `CONTRIBUTING.md`. The `bump-version.ps1` helper

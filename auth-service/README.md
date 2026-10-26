@@ -22,7 +22,10 @@ For the Application Passwords flow to work on your WordPress site:
 
 ### ⚡ One-Liner Remote Plugin Deployment (`deploy_plugin.py`)
 
-Deploy updates to the `belchamber-auth-bridge` WordPress plugin with a single command to any connected WordPress site (such as `tools.belchamber.us`). The deployer integrates seamlessly with `site-manager` config (`sites.yaml` & encrypted credentials):
+> [!NOTE]
+> **Dormant.** No site runs WordPress any more, `tools.belchamber.us` included, so the examples below have no target. The deployer also reads Site Ops' `sites.yaml`, which no longer exists now that Site Ops keeps its sites in its database, so it needs rework before use. Kept as a record of how the deploy worked.
+
+Deploy updates to the `belchamber-auth-bridge` WordPress plugin with a single command to any connected WordPress site (such as `tools.belchamber.us`). The deployer integrates with Site Ops' config (`sites.yaml` & encrypted credentials):
 
 ```bash
 # 1. Deploy live update to tools.belchamber.us (auto-commits to GitHub & uploads via SFTP)
@@ -34,7 +37,7 @@ python deploy_plugin.py --site tools-belchamber-us --dry-run
 
 **What the one-liner does automatically:**
 1. **GitHub Cloud Backup**: Stages, commits, and pushes plugin updates to `https://github.com/aaronbelchamber/wp-auth-service`.
-2. **Site-Manager Integration**: Reads target site SSH details and decrypts credentials directly from `site-manager` (`sites.yaml` & `~/.wp_site_manager/credentials.enc`).
+2. **Site Ops Integration**: Reads target site SSH details and decrypts credentials directly from Site Ops (`sites.yaml` & `~/.wp_site_manager/credentials.enc`).
 3. **SFTP Direct Upload**: Uploads plugin files via Paramiko SFTP straight to `/wp-content/plugins/belchamber-auth-bridge` on the target server.
 
 ---

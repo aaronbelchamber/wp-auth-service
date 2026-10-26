@@ -23,15 +23,17 @@
 - Captured credentials are model-managed inside thread-safe `CredentialStore` (`threading.Lock`).
 
 ### 2. WordPress Plugin Versioning Policy
-Whenever modifying `belchamber-auth-bridge/belchamber-auth-bridge.php`, run `..\bump-version.ps1 -Plugin belchamber-auth-bridge -Bump patch|minor|major` (from `plugins\`) — do not hand-edit version numbers. It syncs the header `Version:` line and the `BELCHAMBER_AUTH_BRIDGE_VERSION` constant in one step. Bump `BELCHAMBER_AUTH_BRIDGE_DB_VERSION` and its activation-hook `update_option()` call by hand, separately, only when the DB schema actually changed — that's a judgment call the script doesn't make.
+Whenever modifying `belchamber-auth-bridge/belchamber-auth-bridge.php`, run `..\bump-version.ps1 -Plugin belchamber-auth-bridge -Bump patch|minor|major` (from `auth-service\`; the script is at the private upstream repo's root and is not in this public copy) — do not hand-edit version numbers. It syncs the header `Version:` line and the `BELCHAMBER_AUTH_BRIDGE_VERSION` constant in one step. Bump `BELCHAMBER_AUTH_BRIDGE_DB_VERSION` and its activation-hook `update_option()` call by hand, separately, only when the DB schema actually changed — that's a judgment call the script doesn't make.
 
 ---
 
 ## 🚀 One-Liner Execution Commands
 
-### Deploy Plugin to Remote Site
+### Deploy Plugin to Remote Site (dormant)
+> Dormant: no site runs WordPress any more, `tools.belchamber.us` included, and the deployer reads Site Ops' `sites.yaml`, which no longer exists now that Site Ops keeps its sites in its database. Kept as a record; it needs rework before use.
+
 ```powershell
-# Live deployment to tools.belchamber.us (auto-commits to GitHub & uploads via SFTP)
+# Former live deployment to tools.belchamber.us (auto-commits to GitHub & uploads via SFTP)
 python deploy_plugin.py --plugin belchamber-auth-bridge --site tools-belchamber-us
 
 # Dry-run deployment validation
